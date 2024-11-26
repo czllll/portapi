@@ -9,7 +9,7 @@ export default function Home() {
         <div className="flex flex-col items-center gap-4">
           <Image
             className="dark:invert"
-            src="/logo.svg"  // 替换为你的项目 logo
+            src="/logo.png"
             alt="Project logo"
             width={180}
             height={38}

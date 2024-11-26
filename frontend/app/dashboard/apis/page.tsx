@@ -1,6 +1,4 @@
 "use client"
-
-import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -24,11 +22,16 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog" 
+
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -37,39 +40,52 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { MoreVertical } from "lucide-react"
+import { useEffect, useState } from "react"
+import { Switch } from "@/components/ui/switch"
+import { useToast } from "@/hooks/use-toast"
+import { Pencil, Trash2 } from "lucide-react"
 
-interface Api {
-  id: string
+interface ApiInfo {
+  id: number
   name: string
-  key: string
-  status: "Active" | "Inactive"
+  url: string
+  method: string
   description: string
+  status: number
+  headers: string
+  params: string
+  response: string
+  createTime: string
+  updateTime: string
 }
 
 export default function ApisPage() {
-  const [apis, setApis] = useState<Api[]>([])
+  const BASE_URL = process.env.NEXT_PUBLIC_BASE_API_URL
+  const [apis, setApis] = useState<ApiInfo[]>([])
   const [loading, setLoading] = useState(true)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
-  const [currentApi, setCurrentApi] = useState<Api | null>(null)
-  const [newApi, setNewApi] = useState<Partial<Api>>({
+  const [currentApi, setCurrentApi] = useState<ApiInfo | null>(null)
+  const { toast } = useToast()
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false)
+  const [deleteApi, setDeleteApi] = useState<ApiInfo | null>(null)
+  const [newApi, setNewApi] = useState<Partial<ApiInfo>>({
     name: "",
+    url: "",
+    method: "GET",
     description: "",
-    status: "Active"
+    status: 1,
+    headers: "{}",
+    params: "{}",
+    response: "{}"
   })
-
-  useEffect(() => {
-    fetchApis()
-  }, [])
 
   const fetchApis = async () => {
     try {
       setLoading(true)
-      // TODO: 调用后端获取API列表接口
-      // const response = await fetch('/api/apis')
-      // const data = await response.json()
-      // setApis(data)
+      const response = await fetch(`${BASE_URL}/api-info/page?current=1&size=10`)
+      const data = await response.json()
+      setApis(data.records)
     } catch (error) {
       console.error('Failed to fetch APIs:', error)
     } finally {
@@ -77,54 +93,120 @@ export default function ApisPage() {
     }
   }
 
+  useEffect(() => {
+    fetchApis()
+  }, [])
+
   const handleCreate = async () => {
     try {
-      // TODO: 调用后端创建API接口
-      // const response = await fetch('/api/apis', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(newApi)
-      // })
-      // const createdApi = await response.json()
-      // setApis([...apis, createdApi])
-      
-      setNewApi({ name: "", description: "", status: "Active" })
-      setIsCreateOpen(false)
+      const response = await fetch(`${BASE_URL}/api-info`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newApi)
+      })
+      if (response.ok) {
+        toast({
+          description: "API创建成功",
+        })
+        fetchApis()
+        setNewApi({
+          name: "",
+          url: "",
+          method: "GET",
+          description: "",
+          status: 1,
+          headers: "{}",
+          params: "{}",
+          response: "{}"
+        })
+        setIsCreateOpen(false)
+      }
     } catch (error) {
       console.error('Failed to create API:', error)
+      toast({
+        variant: "destructive",
+        description: "API创建失败",
+      })
     }
   }
 
   const handleEdit = async () => {
     if (!currentApi) return
     try {
-      // TODO: 调用后端更新API接口
-      // const response = await fetch(`/api/apis/${currentApi.id}`, {
-      //   method: 'PUT',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(currentApi)
-      // })
-      // const updatedApi = await response.json()
-      // setApis(apis.map(api => api.id === updatedApi.id ? updatedApi : api))
-
-      setIsEditOpen(false)
-      setCurrentApi(null)
+      const response = await fetch(`${BASE_URL}/api-info`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(currentApi)
+      })
+      if (response.ok) {
+        toast({
+          description: "API更新成功",
+        })
+        fetchApis()
+        setIsEditOpen(false)
+        setCurrentApi(null)
+      }
     } catch (error) {
       console.error('Failed to update API:', error)
+      toast({
+        variant: "destructive",
+        description: "API更新失败",
+      })
+    }
+  }
+  
+  const handleDelete = async () => {
+    if (!deleteApi?.id) return
+    
+    try {
+      const response = await fetch(`${BASE_URL}/api-info/${deleteApi.id}`, {
+        method: 'DELETE'
+      })
+      if (response.ok) {
+        toast({
+          description: "API删除成功",
+        })
+        fetchApis()
+        setIsDeleteOpen(false)
+        setDeleteApi(null)
+      }
+    } catch (error) {
+      console.error('Failed to delete API:', error)
+      toast({
+        variant: "destructive",
+        description: "API删除失败",
+      })
+    }
+  }
+  
+  const handleStatusChange = async (id: number, checked: boolean) => {
+    try {
+      const api = apis.find(api => api.id === id)
+      if (!api) return
+  
+      const response = await fetch(`${BASE_URL}/api-info`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...api,
+          status: checked ? 1 : 0
+        })
+      })
+      if (response.ok) {
+        toast({
+          description: "状态更新成功",
+        })
+        fetchApis()
+      }
+    } catch (error) {
+      console.error('Failed to update status:', error)
+      toast({
+        variant: "destructive",
+        description: "状态更新失败",
+      })
     }
   }
 
-  const handleDelete = async (id: string) => {
-    try {
-      // TODO: 调用后端删除API接口
-      // await fetch(`/api/apis/${id}`, {
-      //   method: 'DELETE'
-      // })
-      setApis(apis.filter(api => api.id !== id))
-    } catch (error) {
-      console.error('Failed to delete API:', error)
-    }
-  }
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
@@ -148,28 +230,35 @@ export default function ApisPage() {
                 />
               </div>
               <div className="grid gap-2">
-                <label>Description</label>
+                <label>URL</label>
                 <Input
-                  value={newApi.description}
-                  onChange={(e) => setNewApi({ ...newApi, description: e.target.value })}
+                  value={newApi.url}
+                  onChange={(e) => setNewApi({ ...newApi, url: e.target.value })}
                 />
               </div>
               <div className="grid gap-2">
-                <label>Status</label>
+                <label>Method</label>
                 <Select
-                  value={newApi.status}
-                  onValueChange={(value: "Active" | "Inactive") => 
-                    setNewApi({ ...newApi, status: value })
-                  }
+                  value={newApi.method}
+                  onValueChange={(value) => setNewApi({ ...newApi, method: value })}
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Active">Active</SelectItem>
-                    <SelectItem value="Inactive">Inactive</SelectItem>
+                    <SelectItem value="GET">GET</SelectItem>
+                    <SelectItem value="POST">POST</SelectItem>
+                    <SelectItem value="PUT">PUT</SelectItem>
+                    <SelectItem value="DELETE">DELETE</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="grid gap-2">
+                <label>Description</label>
+                <Input
+                  value={newApi.description}
+                  onChange={(e) => setNewApi({ ...newApi, description: e.target.value })}
+                />
               </div>
             </div>
             <DialogFooter>
@@ -185,7 +274,7 @@ export default function ApisPage() {
       {/* API列表 */}
       <Card>
         <CardHeader>
-          <CardTitle>API Keys</CardTitle>
+          <CardTitle>API List</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -197,48 +286,56 @@ export default function ApisPage() {
               <TableHeader>
                 <TableRow>
                   <TableCell>Name</TableCell>
-                  <TableCell>Key</TableCell>
+                  <TableCell>URL</TableCell>
+                  <TableCell>Method</TableCell>
                   <TableCell>Status</TableCell>
                   <TableCell>Description</TableCell>
-                  <TableCell className="w-[100px]">Actions</TableCell>
+                  <TableCell className="w-[140px]">Actions</TableCell>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {apis.map((api) => (
                   <TableRow key={api.id}>
                     <TableCell>{api.name}</TableCell>
-                    <TableCell>{api.key}</TableCell>
-                    <TableCell>{api.status}</TableCell>
+                    <TableCell>{api.url}</TableCell>
+                    <TableCell>{api.method}</TableCell>
+                    <TableCell>
+                      <Switch
+                        checked={api.status === 1}
+                        onCheckedChange={(checked) => handleStatusChange(api.id, checked)}
+                      />
+                    </TableCell>
                     <TableCell>{api.description}</TableCell>
                     <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setCurrentApi(api)
-                              setIsEditOpen(true)
-                            }}
-                          >
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="text-red-600"
-                            onClick={() => handleDelete(api.id)}
-                          >
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setCurrentApi(api)
+                            setIsEditOpen(true)
+                          }}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-red-500 hover:text-red-500"
+                          onClick={() => {
+                            setDeleteApi(api)
+                            setIsDeleteOpen(true)
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
+            
           )}
         </CardContent>
       </Card>
@@ -260,6 +357,34 @@ export default function ApisPage() {
               />
             </div>
             <div className="grid gap-2">
+              <label>URL</label>
+              <Input
+                value={currentApi?.url}
+                onChange={(e) => 
+                  setCurrentApi(currentApi ? { ...currentApi, url: e.target.value } : null)
+                }
+              />
+            </div>
+            <div className="grid gap-2">
+              <label>Method</label>
+              <Select
+                value={currentApi?.method}
+                onValueChange={(value) =>
+                  setCurrentApi(currentApi ? { ...currentApi, method: value } : null)
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="GET">GET</SelectItem>
+                  <SelectItem value="POST">POST</SelectItem>
+                  <SelectItem value="PUT">PUT</SelectItem>
+                  <SelectItem value="DELETE">DELETE</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
               <label>Description</label>
               <Input
                 value={currentApi?.description}
@@ -267,23 +392,6 @@ export default function ApisPage() {
                   setCurrentApi(currentApi ? { ...currentApi, description: e.target.value } : null)
                 }
               />
-            </div>
-            <div className="grid gap-2">
-              <label>Status</label>
-              <Select
-                value={currentApi?.status}
-                onValueChange={(value: "Active" | "Inactive") =>
-                  setCurrentApi(currentApi ? { ...currentApi, status: value } : null)
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Active">Active</SelectItem>
-                  <SelectItem value="Inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
           </div>
           <DialogFooter>
@@ -294,6 +402,21 @@ export default function ApisPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>确认删除</AlertDialogTitle>
+            <AlertDialogDescription>
+              确定要删除API &quot;{deleteApi?.name}&quot; 吗？此操作无法撤销。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDeleteApi(null)}>取消</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>删除</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
