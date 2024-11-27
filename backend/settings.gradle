@@ -1,1 +1,5 @@
 rootProject.name = 'backend'
+
+include 'portapi-admin'
+include 'portapi-proxy'
+include 'portapi-gateway'

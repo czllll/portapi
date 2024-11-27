@@ -25,6 +25,8 @@ public class User implements Serializable {
     private String nickname;
     private String avatarUrl;
     private String bio;
+    private String accessKey;
+    private String accessSecret;
 
     // 状态信息
     private String role;
