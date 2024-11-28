@@ -38,6 +38,7 @@ public class User implements Serializable {
     // OAuth提供商
     private String googleId;
     private String githubId;
+    private Integer isDeleted;
 
     // 时间信息
     private Date createTime;

@@ -11,10 +11,13 @@ import work.dirtsai.backend.common.BaseResponse;
 import work.dirtsai.backend.common.ErrorCode;
 import work.dirtsai.backend.common.ResultUtils;
 import work.dirtsai.backend.exception.BusinessException;
+import work.dirtsai.backend.model.dto.UserDTO;
 import work.dirtsai.backend.model.dto.UserLoginDTO;
 import work.dirtsai.backend.model.dto.UserRegisterDTO;
 import work.dirtsai.backend.model.vo.UserVO;
 import work.dirtsai.backend.service.UserService;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/user")
@@ -46,5 +49,46 @@ public class UserController {
         }
         UserVO user = userService.getLoginUser(token);
         return ResultUtils.success(user);
+    }
+
+    @GetMapping("/page")
+    public BaseResponse<List<UserVO>> getUserList(
+            @RequestParam(defaultValue = "1") Integer currentPage,
+            @RequestParam(defaultValue = "10") Integer pageSize
+    ) {
+        List<UserVO> userList = userService.getUserList(currentPage, pageSize);
+        return ResultUtils.success(userList);
+    }
+
+    @PutMapping("/{id}/status")
+    public BaseResponse<Boolean> updateUserStatus(
+            @PathVariable Long id,
+            @RequestParam Integer status
+    ) {
+        boolean result = userService.updateUserStatus(id, status);
+        return ResultUtils.success(result);
+    }
+
+    /**
+     * 逻辑删除
+     * @param id
+     * @return
+     */
+    @PutMapping("/{id}/delete")
+    public BaseResponse<Boolean> deleteUser(@PathVariable Long id) {
+        boolean result = userService.deleteUser(id);
+        return ResultUtils.success(result);
+    }
+
+    /**
+     * 更新用户信息
+     * @param id
+     * @param request
+     * @return
+     */
+    @PutMapping("/{id}")
+    public BaseResponse<Boolean> updateUser(@PathVariable Long id, @RequestBody UserDTO request) {
+        boolean result = userService.updateUser(id, request);
+        return ResultUtils.success(result);
     }
 }

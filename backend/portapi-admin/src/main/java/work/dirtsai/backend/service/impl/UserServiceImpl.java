@@ -4,7 +4,9 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,13 +18,16 @@ import org.springframework.stereotype.Service;
 import work.dirtsai.backend.common.ErrorCode;
 import work.dirtsai.backend.exception.BusinessException;
 import work.dirtsai.backend.mapper.UserMapper;
+import work.dirtsai.backend.model.dto.UserDTO;
 import work.dirtsai.backend.model.dto.UserLoginDTO;
 import work.dirtsai.backend.model.dto.UserRegisterDTO;
 import work.dirtsai.backend.model.entity.User;
 import work.dirtsai.backend.model.vo.UserVO;
 import work.dirtsai.backend.service.UserService;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -201,5 +206,59 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public boolean isAdmin(HttpServletRequest request) {
         // 实现判断是否是管理员逻辑
         return false;
+    }
+
+    @Override
+    public List<UserVO> getUserList(Integer currentPage, Integer pageSize) {
+        Page<User> page = new Page<>(currentPage, pageSize);
+        Page<User> userPage = this.page(page, new QueryWrapper<>());
+
+        // 筛选出非is_deleted的用户
+        userPage.getRecords().removeIf(user -> user.getIsDeleted() == 1);
+
+        return userPage.getRecords().stream().map(user -> {
+            UserVO userVO = new UserVO();
+            userVO.setUserId(user.getId());
+            userVO.setUsername(user.getUsername());
+            userVO.setEmail(user.getEmail());
+            userVO.setRole(user.getRole());
+            userVO.setStatus(user.getStatus());
+            return userVO;
+        }).collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean updateUserStatus(Long id, Integer status) {
+        User user = this.getById(id);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "用户不存在");
+        }
+
+        user.setStatus(status);
+        return this.updateById(user);
+    }
+
+    @Override
+    public boolean deleteUser(Long id) {
+        User user = this.getById(id);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "用户不存在");
+        }
+
+        user.setIsDeleted(1);
+        return this.updateById(user);
+    }
+
+    @Override
+    public boolean updateUser(Long id, UserDTO request) {
+        User user = this.getById(id);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "用户不存在");
+        }
+
+        user.setUsername(request.getUsername());
+        user.setEmail(request.getEmail());
+        user.setRole(request.getRole());
+        return this.updateById(user);
     }
 }

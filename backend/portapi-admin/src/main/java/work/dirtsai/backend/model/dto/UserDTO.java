@@ -1,9 +1,9 @@
-package work.dirtsai.backend.model.vo;
+package work.dirtsai.backend.model.dto;
 
 import lombok.Data;
 
 @Data
-public class UserVO {
+public class UserDTO {
     private Long userId;
     private String username;
     private String email;

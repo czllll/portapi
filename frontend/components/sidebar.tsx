@@ -5,7 +5,9 @@ import {
   Settings,
   BarChartIcon,
   CodeIcon,
-  CloudIcon
+  CloudIcon,
+  User,
+  Users
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -25,6 +27,11 @@ const menuItems = [
     title: "Analytics", 
     icon: BarChartIcon,
     href: "/dashboard/analytics"
+  },
+  {
+    title: "Users management", 
+    icon: Users,
+    href: "/dashboard/users-management"
   },
   {
     title: "Settings",
