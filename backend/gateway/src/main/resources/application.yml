@@ -14,7 +14,7 @@ spring:
       globalcors:
         corsConfigurations:
           '[/**]':
-            allowedOrigins: "http://localhost:3000"  # 建议明确指定允许的域名
+            allowedOrigins: "http://localhost:3000"
             allowedMethods:
               - GET
               - POST
@@ -40,3 +40,7 @@ gateway:
 
 internal:
   secret: ${INTERNAL_SECRET:xHXYRaxYUJ6OYmFPPn0+j2aepYTWsxNzeG1vNwPnKLs=}
+
+jwt:
+  secret: Aoo/Lv+crFTY5wYzalGw5Pab6FVEYy/xnYZKGSjIvY4=
+  expiration: 3600000

@@ -2,6 +2,7 @@ package work.dirtsai.common.utils;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -10,6 +11,7 @@ import java.util.Date;
 @Component
 public class JwtUtils {
 
+    @Getter
     @Value("${jwt.secret}")
     private String secret;
     @Value("${jwt.expiration}")
@@ -17,12 +19,12 @@ public class JwtUtils {
 
     /**
      * Create a token
-     * @param username
+     * @param userId
      * @return
      */
-    public String createToken(String username) {
+    public String createToken(Long userId) {
         return Jwts.builder()
-                .setSubject(username)
+                .setSubject(String.valueOf(userId))
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(Keys.hmacShaKeyFor(secret.getBytes()))
@@ -62,8 +64,18 @@ public class JwtUtils {
                 .getSubject();
     }
 
-    public String getSecret() {  // 添加这个方法
-        return secret;
+    /**
+     * decrypt token
+     * @param token
+     */
+    public Long parseToken(String token) {
+        return Long.valueOf(Jwts.parserBuilder()
+                .setSigningKey(Keys.hmacShaKeyFor(secret.getBytes()))
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .getSubject());
     }
+
 
 }

@@ -35,22 +35,11 @@ type LoginResponse = BaseResponse<{
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import router from 'next/router';
+import toast from 'react-hot-toast';
 
 const BASE_API_URL = process.env.NEXT_PUBLIC_BASE_API_URL;
 const TOKEN_KEY = 'access_token';
 
-
-// 设置拦截器
-axios.interceptors.request.use(
-  (config) => {
-    const token = Cookies.get(TOKEN_KEY);
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
 
 axios.interceptors.response.use(
   (response) => response,
@@ -85,10 +74,13 @@ export const authService = {
         `${BASE_API_URL}/user/login`, 
         formData
       );
-            
+      if (response.data.code !== 200) {
+        toast.error(response.data.message);
+      }     
       if (response.data.data?.token) {
         const token = response.data.data.token;        
         Cookies.set(TOKEN_KEY, token);
+        localStorage.setItem('token', token);
         if (token) {
           axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         }

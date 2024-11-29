@@ -42,11 +42,14 @@ public class UserController {
 
     @GetMapping("/current")
     public BaseResponse<UserVO> getCurrentUser(HttpServletRequest request) {
-        String token = request.getHeader("Authorization");
+        // 获取请求头中的token
+        String token = request.getHeader("Authorization").replaceFirst("Bearer ", "");
+        log.info("token: {}", token);
         if (StringUtils.isBlank(token)) {
             throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
         }
         UserVO user = userService.getLoginUser(token);
+
         return ResultUtils.success(user);
     }
 

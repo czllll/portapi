@@ -33,7 +33,7 @@ springdoc:
     path: /v3/api-docs
 jwt:
   secret: Aoo/Lv+crFTY5wYzalGw5Pab6FVEYy/xnYZKGSjIvY4=
-  expiration: 86400000
+  expiration: 3600000
 
 gateway:
   ip: localhost:8080

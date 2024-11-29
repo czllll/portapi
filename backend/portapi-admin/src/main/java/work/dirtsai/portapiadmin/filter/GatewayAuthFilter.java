@@ -79,10 +79,13 @@ public class GatewayAuthFilter implements Filter {
             // 保存随机数，防止重放攻击
             redisTemplate.opsForValue().set(nonceKey, "1", EXPIRE_TIME, TimeUnit.SECONDS);
 
-
+            // 打印日志
+            log.info("Internal auth: timestamp={}, nonce={}, path={}", timestamp, nonce, path);
+            log.info("Internal auth: sign={}", sign);
             // 检查签名
             String content = timestamp + ":" + nonce + ":" + path;
             String expectedSign = HmacUtils.hmacSha256Hex(secret, content);
+            log.info("Internal auth: expectedSign={}", expectedSign);
             return sign.equals(expectedSign);
 
 

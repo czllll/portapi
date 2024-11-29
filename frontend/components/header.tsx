@@ -23,13 +23,22 @@ import { useTheme } from "next-themes"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useRouter } from "next/navigation"
+import Cookies from 'js-cookie';
+import axios from "@/lib/axios-config"
+import toast from "react-hot-toast"
 
+// 定义 UserProfile 接口
 interface UserProfile {
-  id: string
-  name: string
-  email: string
-  avatarUrl: string
+  userId: number;
+  username: string;
+  email: string;
+  token: string;
+  avatar: string | null;
+  role: string;
+  status: string | null;
 }
+
+
 
 interface Notification {
   id: string
@@ -37,10 +46,13 @@ interface Notification {
 }
 
 const defaultUserProfile: UserProfile = {
-  id: "1",
-  name: "User",
-  email: "user@example.com",
-  avatarUrl: "/avatars/default.png"
+  userId: 0,
+  username: '',
+  email: '',
+  token: '',
+  avatar: null,
+  role: '',
+  status: null
 }
 
 const defaultNotification: Notification = {
@@ -53,9 +65,11 @@ export default function Header() {
   const router = useRouter()
   const [mounted, setMounted] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
-  const [userProfile, ] = useState<UserProfile>(defaultUserProfile)
+  const [userProfile, setUserProfile] = useState<UserProfile>(defaultUserProfile)
   const [notification, ] = useState<Notification>(defaultNotification)
   const [, setLoading] = useState(true)
+  const BASE_URL = process.env.NEXT_PUBLIC_BASE_API_URL
+
 
   useEffect(() => {
     setMounted(true)
@@ -80,10 +94,9 @@ export default function Header() {
 
   const fetchUserProfile = async () => {
     try {
-      // TODO: 调用后端获取用户信息接口
-      // const response = await fetch('/api/user/profile')
-      // const data = await response.json()
-      // setUserProfile(data)
+      const response = await axios.get(`${BASE_URL}/user/current`);
+      const data = response.data.data;
+      setUserProfile(data)
     } catch (error) {
       console.error('Failed to fetch user profile:', error)
     }
@@ -116,11 +129,11 @@ export default function Header() {
 
   const handleLogout = async () => {
     try {
-      // TODO: 调用后端登出接口
-      // await fetch('/api/auth/logout', {
-      //   method: 'POST'
-      // })
-      router.push('/login')
+      //清除cookie的token
+      Cookies.remove('access_token')
+      localStorage.removeItem('token')
+      toast.success('Logged out successfully')
+      router.push('/auth/login')
     } catch (error) {
       console.error('Failed to logout:', error)
     }
@@ -176,18 +189,18 @@ export default function Header() {
               <Button variant="ghost" className="relative h-9 w-9 rounded-full">
                 <Avatar className="h-9 w-9">
                   <AvatarImage 
-                    src={userProfile.avatarUrl} 
-                    alt={userProfile.name} 
+                    src={userProfile.avatar?userProfile.avatar:""} 
+                    alt={userProfile.username} 
                   />
                   <AvatarFallback>
-                    {userProfile.name[0]}
+                    {userProfile.username[0]}
                   </AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end">
               <DropdownMenuLabel>
-                {userProfile.name}
+                {userProfile.username}
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuGroup>

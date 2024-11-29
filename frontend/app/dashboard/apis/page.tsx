@@ -44,6 +44,7 @@ import { useEffect, useState } from "react"
 import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/hooks/use-toast"
 import { Pencil, Trash2 } from "lucide-react"
+import axios from "@/lib/axios-config"
 
 interface ApiInfo {
   id: number
@@ -83,8 +84,13 @@ export default function ApisPage() {
   const fetchApis = async () => {
     try {
       setLoading(true)
-      const response = await fetch(`${BASE_URL}/api-info/page?current=1&size=10`)
-      const data = await response.json()
+      const response = await axios.get(`${BASE_URL}/api-info/page`, {
+        params: {
+          current: 1,
+          size: 10
+        }
+      });
+      const data = await response.data
       setApis(data.records)
     } catch (error) {
       console.error('Failed to fetch APIs:', error)

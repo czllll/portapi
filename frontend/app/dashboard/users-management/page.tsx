@@ -43,6 +43,7 @@ import { useEffect, useState } from "react"
 import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/hooks/use-toast"
 import { Pencil, Trash2 } from "lucide-react"
+import axios from "@/lib/axios-config"
 
 interface User {
     userId: number
@@ -80,10 +81,9 @@ export default function UsersPage() {
   const fetchUsers = async () => {
     try {
       setLoading(true)
-      const response = await fetch(`${BASE_URL}/user/page?current=1&size=10`)
-      const data: ApiResponse = await response.json()
+      const response = await axios.get(`${BASE_URL}/user/page?current=1&size=10`)
+      const data: ApiResponse = await response.data;
       setUsers(data.data)
-      console.log("==========="+data.data)
     } catch (error) {
       console.error('Failed to fetch users:', error)
     } finally {

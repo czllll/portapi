@@ -32,7 +32,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
 
-    private static final byte[] JWT_SECRET = new byte[32];
     @Resource
     private RedisTemplate<String, Object> redisTemplate;
 
@@ -123,7 +122,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         // 生成JWT token
-        String token = tokenService.createToken(user.getUsername());
+        String token = tokenService.createToken(user.getId());
 
         // 转换为响应对象
 
@@ -148,20 +147,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         try {
             // 验证JWT token
-            DecodedJWT jwt = JWT.require(Algorithm.HMAC256(JWT_SECRET))
-                    .build()
-                    .verify(token);
+            Long userId = tokenService.parseToken(token);
 
-            // 从token中获取用户ID
-            Long userId = jwt.getClaim("userId").asLong();
+            System.out.println("userNamefromtoken: "+userId);
+//            // 从Redis中获取用户信息
+//            String redisKey = String.format("user:token:%s", userId);
+//            Object cachedUser = redisTemplate.opsForValue().get(redisKey);
 
-            // 从Redis中获取用户信息
-            String redisKey = String.format("user:token:%s", userId);
-            Object cachedUser = redisTemplate.opsForValue().get(redisKey);
-
-            if (cachedUser == null) {
-                throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "用户未登录或登录已过期");
-            }
+//            if (cachedUser == null) {
+//                throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "用户未登录或登录已过期");
+//            }
 
             // 查询数据库获取最新用户信息
             User user = this.getById(userId);

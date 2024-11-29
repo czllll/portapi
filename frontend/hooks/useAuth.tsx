@@ -1,7 +1,8 @@
 import { authService } from "@/services/auth"
 import { useState } from "react"
-import axios from "axios"
+import axios from "@/lib/axios-config"
 import { useRouter } from "next/navigation"
+import toast from "react-hot-toast"
 
 interface RegisterFormData {
     username: string
@@ -24,25 +25,30 @@ export const useAuth = () => {
             await authService.register(formData)
             router.push('/login')
             return true
-        } catch (error) {
-            if (axios.isAxiosError(error)) {
-                setError(error.response?.data?.message || '注册失败')
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                toast.error(error.message)
+            } else {
+                toast.error('注册失败')
             }
             return false
         } finally {
             setIsLoading(false)
         }
     }
+    
 
     const handleLogin = async(formData: LoginFormData) => {  
         setIsLoading(true)
         try {
             await authService.login(formData)
-            router.push('/')
+            router.push('/dashboard')
             return true
         } catch (error) {
-            if (axios.isAxiosError(error)) {
-                setError(error.response?.data?.message || '登录失败')
+            if (error instanceof Error) {
+                toast.error(error.message)
+            } else {
+                toast.error('登录失败')
             }
             return false
         } finally {

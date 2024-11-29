@@ -11,8 +11,13 @@ public class TokenServiceImpl implements TokenService {
     private JwtUtils jwtUtils;
 
     @Override
-    public String createToken(String username) {
-        return jwtUtils.createToken(username);
+    public String createToken(Long userId) {
+        return jwtUtils.createToken(userId);
+    }
+
+    @Override
+    public Long parseToken(String token) {
+        return jwtUtils.parseToken(token);
     }
 }
 
