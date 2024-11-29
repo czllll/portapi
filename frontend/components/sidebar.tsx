@@ -6,43 +6,94 @@ import {
   BarChartIcon,
   CodeIcon,
   CloudIcon,
-  User,
   Users
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { User } from "@/types/user";
+import { useEffect, useState } from "react";
+import axios from "@/lib/axios-config";
 
 interface SidebarProps {
   isOpen: boolean;
   onToggle: () => void;
 }
 
+
+const defaultUser: User = {
+  userId: 0,
+  username: '',
+  email: '',
+  token: '',
+  avatar: null,
+  role: '',
+  status: null
+}
+
 const menuItems = [
   {
     title: "APIs",
     icon: CodeIcon,
-    href: "/dashboard/apis"
+    href: "/dashboard/apis",
+    role: ["admin", "user"]
   },
   {
     title: "Analytics", 
     icon: BarChartIcon,
-    href: "/dashboard/analytics"
+    href: "/dashboard/analytics",
+    role: ["admin", "user"]
+
   },
   {
     title: "Users management", 
     icon: Users,
-    href: "/dashboard/users-management"
+    href: "/dashboard/users-management",
+    role: ["admin"]
+
   },
   {
     title: "Settings",
     icon: Settings,
-    href: "/dashboard/settings"
+    href: "/dashboard/settings",
+    role: ["admin", "user"]
   }
 ];
 
 export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
   const pathname = usePathname();
+  const [, setLoading] = useState(true)
+  const [userProfile, setUserProfile] = useState<User>(defaultUser)
+  const BASE_URL = process.env.NEXT_PUBLIC_BASE_API_URL
+  useEffect(() => {
+    const initData = async () => {
+      try {
+        await Promise.all([
+          fetchUserProfile(),
+        ])
+      } catch (error) {
+        console.error('Failed to initialize data:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
 
+    initData()
+  }, [])
+
+  const fetchUserProfile = async () => {
+    try {
+      const response = await axios.get(`${BASE_URL}/user/current`);
+      const data = response.data.data;
+      setUserProfile(data)
+    } catch (error) {
+      console.error('Failed to fetch user profile:', error)
+    }
+  }
+
+  const filteredMenuItems = menuItems.filter(item => {
+    return item.role.includes(userProfile.role);
+  });
+  
   return (
     <aside className={cn(
       "h-[calc(100vh-4rem)] bg-background border-r transition-all duration-300",
@@ -74,7 +125,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
       
       {/* 导航菜单 */}
       <nav className="p-2">
-        {menuItems.map((item) => (
+        {filteredMenuItems.map((item) => (
           <Link 
             key={item.href}
             href={item.href}

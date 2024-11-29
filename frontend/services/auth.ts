@@ -5,6 +5,7 @@ interface RegisterData {
 }
 
 interface RegisterResponse {
+  code: number;
   success: boolean;
   message: string;
   data?: {
@@ -22,6 +23,8 @@ interface BaseResponse<T> {
   data: T;
   message: string;
 }
+
+import { User } from '@/types/user';
 
 type LoginResponse = BaseResponse<{
   userId: number;
@@ -100,5 +103,18 @@ export const authService = {
     Cookies.remove(TOKEN_KEY);
     delete axios.defaults.headers.common['Authorization'];
     router.push('/login');
+  },
+
+  getCurrentUser: async () => {
+    try {
+      const response = await axios.get(`${BASE_API_URL}/user/current`);
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        toast.error(error.response?.data?.message || '获取用户信息失败');
+        throw new Error(error.response?.data?.message || '获取用户信息失败');
+      }
+      throw error;
+    }
   }
 };

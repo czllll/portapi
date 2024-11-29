@@ -25,7 +25,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useRouter } from "next/navigation"
 import Cookies from 'js-cookie';
 import axios from "@/lib/axios-config"
-import toast from "react-hot-toast"
+
 
 // 定义 UserProfile 接口
 interface UserProfile {
@@ -131,8 +131,6 @@ export default function Header() {
     try {
       //清除cookie的token
       Cookies.remove('access_token')
-      localStorage.removeItem('token')
-      toast.success('Logged out successfully')
       router.push('/auth/login')
     } catch (error) {
       console.error('Failed to logout:', error)
