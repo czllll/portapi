@@ -1,0 +1,42 @@
+spring:
+  application:
+    name: portapi-gateway
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "http://localhost:3000"  # 建议明确指定允许的域名
+            allowedMethods:
+              - GET
+              - POST
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+      routes:
+        - id: admin_route
+          uri: lb://portapi-admin1
+          predicates:
+            - Path=/**
+          filters:
+            - AddRequestHeader=X-Gateway-Token, ${gateway.secret}
+
+
+
+
+server:
+  port: 8080
+
+gateway:
+  secret: ${GATEWAY_SECRET:your-secret-key-here}
+
+internal:
+  secret: ${INTERNAL_SECRET:xHXYRaxYUJ6OYmFPPn0+j2aepYTWsxNzeG1vNwPnKLs=}

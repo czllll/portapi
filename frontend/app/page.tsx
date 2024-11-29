@@ -25,12 +25,12 @@ export default function Home() {
 
         <div className="flex gap-4 items-center mt-4">
           <Button asChild size="lg">
-            <Link href="/login">
+            <Link href="/auth/login">
               Sign In
             </Link>
           </Button>
           <Button variant="outline" asChild size="lg">
-            <Link href="/register">
+            <Link href="/auth/register">
               Create Account
             </Link>
           </Button>
