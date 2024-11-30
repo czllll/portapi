@@ -6,7 +6,8 @@ import {
   BarChartIcon,
   CodeIcon,
   CloudIcon,
-  Users
+  Users,
+  KeySquare
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -52,11 +53,18 @@ const menuItems = [
 
   },
   {
+    title: "Tokens",
+    icon: KeySquare,
+    href: "/dashboard/tokens",
+    role: ["admin", "user"]
+  },
+  {
     title: "Settings",
     icon: Settings,
     href: "/dashboard/settings",
     role: ["admin", "user"]
-  }
+  },
+
 ];
 
 export default function Sidebar({ isOpen, onToggle }: SidebarProps) {

@@ -12,3 +12,37 @@ create table api_info (
                           create_time datetime,
                           update_time datetime
 );
+
+use portapi_db;
+-- 创建token_groups表
+CREATE TABLE `token_groups` (
+                                `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+                                `name` VARCHAR(255) NOT NULL,
+                                `is_deleted` TINYINT,
+                                `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                `updated_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                                PRIMARY KEY (`id`),
+                                UNIQUE KEY `name` (`name`)
+);
+
+-- 创建tokens表
+CREATE TABLE `tokens` (
+                          `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+                          `token_number` VARCHAR(255) NOT NULL,
+                          `name` VARCHAR(255) NOT NULL,
+                          `expires_at` DATETIME NOT NULL,
+                          `max_quota` INT UNSIGNED NOT NULL,
+                          `remaining_quota` INT UNSIGNED NOT NULL,
+                          `total_quota` INT UNSIGNED NOT NULL,
+                          `used_quota` INT UNSIGNED NOT NULL DEFAULT 0,
+                          `model_restriction` VARCHAR(255),
+                          `status` TINYINT NOT NULL,
+                          `group_id` INT UNSIGNED,
+                          `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                          `updated_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                          `is_deleted` DATETIME,
+                          PRIMARY KEY (`id`),
+                          UNIQUE KEY `token` (`token`),
+                          KEY `group_id` (`group_id`),
+                          CONSTRAINT `tokens_ibfk_1` FOREIGN KEY (`group_id`) REFERENCES `token_groups` (`id`) ON DELETE SET NULL
+);

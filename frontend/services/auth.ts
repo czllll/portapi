@@ -24,8 +24,6 @@ interface BaseResponse<T> {
   message: string;
 }
 
-import { User } from '@/types/user';
-
 type LoginResponse = BaseResponse<{
   userId: number;
   username: string;
@@ -49,6 +47,7 @@ axios.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       authService.logout();
+      toast.error('登录已过期，请重新登录');
       throw new Error('登录已过期，请重新登录');
     }
     return Promise.reject(error);

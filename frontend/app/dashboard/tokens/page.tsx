@@ -41,224 +41,184 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useEffect, useState } from "react"
-import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/hooks/use-toast"
 import { Pencil, Trash2 } from "lucide-react"
 import axios from "@/lib/axios-config"
 
-interface ApiInfo {
+interface Token {
   id: number
+  tokenNumber: string
   name: string
-  url: string
-  method: string
-  description: string
-  status: number
-  headers: string
-  params: string
-  response: string
-  createTime: string
-  updateTime: string
+  userId: number
+  expiresAt: string
+  totalQuota: number
+  usedQuota: number
+  modelRestriction: string
+  status: string
+  groupId: number
+  isDeleted: boolean
+  createdTime: string
+  updatedTime: string
 }
 
-export default function ApisPage() {
+export default function TokensPage() {
   const BASE_URL = process.env.NEXT_PUBLIC_BASE_API_URL
-  const [apis, setApis] = useState<ApiInfo[]>([])
+  const [tokens, setTokens] = useState<Token[]>([])
   const [loading, setLoading] = useState(true)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
-  const [currentApi, setCurrentApi] = useState<ApiInfo | null>(null)
+  const [currentToken, setCurrentToken] = useState<Token | null>(null)
   const { toast } = useToast()
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
-  const [deleteApi, setDeleteApi] = useState<ApiInfo | null>(null)
-  const [newApi, setNewApi] = useState<Partial<ApiInfo>>({
+  const [deleteToken, setDeleteToken] = useState<Token | null>(null)
+  const [newToken, setNewToken] = useState<Partial<Token>>({
     name: "",
-    url: "",
-    method: "GET",
-    description: "",
-    status: 1,
-    headers: "{}",
-    params: "{}",
-    response: "{}"
+    totalQuota: 1000,
+    modelRestriction: "gpt-3.5-turbo",
+    status: "active",
+    groupId: 1,
   })
 
-  const fetchApis = async () => {
+  const fetchTokens = async () => {
     try {
       setLoading(true)
-      const response = await axios.get(`${BASE_URL}/api-info/page`, {
+      const response = await axios.get(`${BASE_URL}/tokens/page`, {
         params: {
           current: 1,
           size: 10
         }
       });
-      const data = await response.data
-      setApis(data.records)
+        setTokens(response.data.data)    
     } catch (error) {
-      console.error('Failed to fetch APIs:', error)
+      console.error('Failed to fetch tokens:', error)
     } finally {
       setLoading(false)
     }
   }
 
   useEffect(() => {
-    fetchApis()
+    fetchTokens()
   }, [])
 
   const handleCreate = async () => {
     try {
-      const response = await axios.post(`${BASE_URL}/api-info`, newApi, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      if (response.data.code === 200) {
+      const response = await axios.post(`${BASE_URL}/tokens`, newToken)
+      if (response.status === 200) {
         toast({
-          description: "API创建成功",
+          description: "Token创建成功",
         })
-        fetchApis()
-        setNewApi({
+        fetchTokens()
+        setNewToken({
           name: "",
-          url: "",
-          method: "GET",
-          description: "",
-          status: 1,
-          headers: "{}",
-          params: "{}",
-          response: "{}"
+          totalQuota: 1000,
+          modelRestriction: "gpt-3.5-turbo",
+          status: "active",
+          groupId: 1,
         })
         setIsCreateOpen(false)
       }
     } catch (error) {
-      console.error('Failed to create API:', error)
+      console.error('Failed to create token:', error)
       toast({
         variant: "destructive",
-        description: "API创建失败",
+        description: "Token创建失败",
       })
     }
   }
 
   const handleEdit = async () => {
-    if (!currentApi) return
+    if (!currentToken) return
     try {
-      const response = await axios.put(`${BASE_URL}/api-info`);
-      if (response.data.code === 200) {
+      const response = await axios.put(`${BASE_URL}/tokens/${id}`, currentToken)
+      if (response.status === 200) {
         toast({
-          description: "API更新成功",
+          description: "Token更新成功",
         })
-        fetchApis()
+        fetchTokens()
         setIsEditOpen(false)
-        setCurrentApi(null)
+        setCurrentToken(null)
       }
     } catch (error) {
-      console.error('Failed to update API:', error)
+      console.error('Failed to update token:', error)
       toast({
         variant: "destructive",
-        description: "API更新失败",
+        description: "Token更新失败",
       })
     }
   }
   
   const handleDelete = async () => {
-    if (!deleteApi?.id) return
+    if (!deleteToken?.id) return
     
     try {
-      const response = await axios.delete(`${BASE_URL}/api-info/${deleteApi.id}`);
-      if (response.data.code === 200) {
+      const response = await axios.delete(`${BASE_URL}/tokens/${deleteToken.id}`)
+      if (response.status === 200) {
         toast({
-          description: "API删除成功",
+          description: "Token删除成功",
         })
-        fetchApis()
+        fetchTokens()
         setIsDeleteOpen(false)
-        setDeleteApi(null)
+        setDeleteToken(null)
       }
     } catch (error) {
-      console.error('Failed to delete API:', error)
+      console.error('Failed to delete token:', error)
       toast({
         variant: "destructive",
-        description: "API删除失败",
+        description: "Token删除失败",
       })
     }
   }
-  
-  const handleStatusChange = async (id: number, checked: boolean) => {
-    try {
-      const api = apis.find(api => api.id === id)
-      if (!api) return
-  
-      const response = await axios.put(`${BASE_URL}/api-info`, {
-        ...api,
-        status: checked ? 1 : 0
-      }, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      if (response.data.code === 200) {
-        toast({
-          description: "状态更新成功",
-        })
-        fetchApis()
-      }
-    } catch (error) {
-      console.error('Failed to update status:', error)
-      toast({
-        variant: "destructive",
-        description: "状态更新失败",
-      })
-    }
-  }
-
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-      {/* 创建API按钮 */}
       <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">APIs</h2>
+        <h2 className="text-3xl font-bold tracking-tight">Tokens</h2>
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
-            <Button>Create API</Button>
+            <Button>Create Token</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Create New API</DialogTitle>
+              <DialogTitle>Create New Token</DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
                 <label>Name</label>
                 <Input
-                  value={newApi.name}
-                  onChange={(e) => setNewApi({ ...newApi, name: e.target.value })}
+                  value={newToken.name}
+                  onChange={(e) => setNewToken({ ...newToken, name: e.target.value })}
                 />
               </div>
               <div className="grid gap-2">
-                <label>URL</label>
+                <label>Total Quota</label>
                 <Input
-                  value={newApi.url}
-                  onChange={(e) => setNewApi({ ...newApi, url: e.target.value })}
+                  type="number"
+                  value={newToken.totalQuota}
+                  onChange={(e) => setNewToken({ ...newToken, totalQuota: parseInt(e.target.value) })}
                 />
               </div>
               <div className="grid gap-2">
-                <label>Method</label>
+                <label>Model Restriction</label>
                 <Select
-                  value={newApi.method}
-                  onValueChange={(value) => setNewApi({ ...newApi, method: value })}
+                  value={newToken.modelRestriction}
+                  onValueChange={(value) => setNewToken({ ...newToken, modelRestriction: value })}
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="GET">GET</SelectItem>
-                    <SelectItem value="POST">POST</SelectItem>
-                    <SelectItem value="PUT">PUT</SelectItem>
-                    <SelectItem value="DELETE">DELETE</SelectItem>
+                    <SelectItem value="gpt-3.5-turbo">GPT-3.5-Turbo</SelectItem>
+                    <SelectItem value="gpt-4">GPT-4</SelectItem>
+                    <SelectItem value="gpt-3.5-turbo,gpt-4">Both</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="grid gap-2">
-                <label>Description</label>
+                <label>Group ID</label>
                 <Input
-                  value={newApi.description}
-                  onChange={(e) => setNewApi({ ...newApi, description: e.target.value })}
+                  type="number"
+                  value={newToken.groupId}
+                  onChange={(e) => setNewToken({ ...newToken, groupId: parseInt(e.target.value) })}
                 />
               </div>
             </div>
@@ -272,10 +232,9 @@ export default function ApisPage() {
         </Dialog>
       </div>
 
-      {/* API列表 */}
       <Card>
         <CardHeader>
-          <CardTitle>API List</CardTitle>
+          <CardTitle>Token List</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -286,34 +245,31 @@ export default function ApisPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableCell>Token Number</TableCell>
                   <TableCell>Name</TableCell>
-                  <TableCell>URL</TableCell>
-                  <TableCell>Method</TableCell>
+                  <TableCell>Quota</TableCell>
+                  <TableCell>Model Restriction</TableCell>
                   <TableCell>Status</TableCell>
-                  <TableCell>Description</TableCell>
+                  <TableCell>Expires At</TableCell>
                   <TableCell className="w-[140px]">Actions</TableCell>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {apis.map((api) => (
-                  <TableRow key={api.id}>
-                    <TableCell>{api.name}</TableCell>
-                    <TableCell>{api.url}</TableCell>
-                    <TableCell>{api.method}</TableCell>
-                    <TableCell>
-                      <Switch
-                        checked={api.status === 1}
-                        onCheckedChange={(checked) => handleStatusChange(api.id, checked)}
-                      />
-                    </TableCell>
-                    <TableCell>{api.description}</TableCell>
+                {tokens.map((token) => (
+                  <TableRow key={token.id}>
+                    <TableCell>{token.tokenNumber}</TableCell>
+                    <TableCell>{token.name}</TableCell>
+                    <TableCell>{token.usedQuota}/{token.totalQuota}</TableCell>
+                    <TableCell>{token.modelRestriction}</TableCell>
+                    <TableCell>{token.status}</TableCell>
+                    <TableCell>{new Date(token.expiresAt).toLocaleDateString()}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => {
-                            setCurrentApi(api)
+                            setCurrentToken(token)
                             setIsEditOpen(true)
                           }}
                         >
@@ -324,7 +280,7 @@ export default function ApisPage() {
                           size="sm"
                           className="text-red-500 hover:text-red-500"
                           onClick={() => {
-                            setDeleteApi(api)
+                            setDeleteToken(token)
                             setIsDeleteOpen(true)
                           }}
                         >
@@ -336,63 +292,52 @@ export default function ApisPage() {
                 ))}
               </TableBody>
             </Table>
-            
           )}
         </CardContent>
       </Card>
 
-      {/* 编辑API对话框 */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit API</DialogTitle>
+            <DialogTitle>Edit Token</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <label>Name</label>
               <Input
-                value={currentApi?.name}
+                value={currentToken?.name}
                 onChange={(e) => 
-                  setCurrentApi(currentApi ? { ...currentApi, name: e.target.value } : null)
+                  setCurrentToken(currentToken ? { ...currentToken, name: e.target.value } : null)
                 }
               />
             </div>
             <div className="grid gap-2">
-              <label>URL</label>
+              <label>Total Quota</label>
               <Input
-                value={currentApi?.url}
-                onChange={(e) => 
-                  setCurrentApi(currentApi ? { ...currentApi, url: e.target.value } : null)
+                type="number"
+                value={currentToken?.totalQuota}
+                onChange={(e) =>
+                  setCurrentToken(currentToken ? { ...currentToken, totalQuota: parseInt(e.target.value) } : null)
                 }
               />
             </div>
             <div className="grid gap-2">
-              <label>Method</label>
+              <label>Model Restriction</label>
               <Select
-                value={currentApi?.method}
+                value={currentToken?.modelRestriction}
                 onValueChange={(value) =>
-                  setCurrentApi(currentApi ? { ...currentApi, method: value } : null)
+                  setCurrentToken(currentToken ? { ...currentToken, modelRestriction: value } : null)
                 }
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="GET">GET</SelectItem>
-                  <SelectItem value="POST">POST</SelectItem>
-                  <SelectItem value="PUT">PUT</SelectItem>
-                  <SelectItem value="DELETE">DELETE</SelectItem>
+                  <SelectItem value="gpt-3.5-turbo">GPT-3.5-Turbo</SelectItem>
+                  <SelectItem value="gpt-4">GPT-4</SelectItem>
+                  <SelectItem value="gpt-3.5-turbo,gpt-4">Both</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-            <div className="grid gap-2">
-              <label>Description</label>
-              <Input
-                value={currentApi?.description}
-                onChange={(e) =>
-                  setCurrentApi(currentApi ? { ...currentApi, description: e.target.value } : null)
-                }
-              />
             </div>
           </div>
           <DialogFooter>
@@ -409,11 +354,11 @@ export default function ApisPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>确认删除</AlertDialogTitle>
             <AlertDialogDescription>
-              确定要删除API &quot;{deleteApi?.name}&quot; 吗？此操作无法撤销。
+              确定要删除Token &quot;{deleteToken?.name}&quot; 吗？此操作无法撤销。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setDeleteApi(null)}>取消</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => setDeleteToken(null)}>取消</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete}>删除</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
