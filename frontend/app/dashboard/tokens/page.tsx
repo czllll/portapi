@@ -41,9 +41,10 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useEffect, useState } from "react"
-import { useToast } from "@/hooks/use-toast"
 import { Pencil, Trash2 } from "lucide-react"
 import axios from "@/lib/axios-config"
+import { toast } from "react-hot-toast"
+import { Switch } from "@/components/ui/switch"
 
 interface Token {
   id: number
@@ -54,7 +55,7 @@ interface Token {
   totalQuota: number
   usedQuota: number
   modelRestriction: string
-  status: string
+  status: number
   groupId: number
   isDeleted: boolean
   createdTime: string
@@ -68,14 +69,13 @@ export default function TokensPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [currentToken, setCurrentToken] = useState<Token | null>(null)
-  const { toast } = useToast()
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
   const [deleteToken, setDeleteToken] = useState<Token | null>(null)
   const [newToken, setNewToken] = useState<Partial<Token>>({
     name: "",
     totalQuota: 1000,
     modelRestriction: "gpt-3.5-turbo",
-    status: "active",
+    status: 1,
     groupId: 1,
   })
 
@@ -104,70 +104,87 @@ export default function TokensPage() {
     try {
       const response = await axios.post(`${BASE_URL}/tokens`, newToken)
       if (response.status === 200) {
-        toast({
-          description: "Token创建成功",
-        })
+        toast.success("Token创建成功")
         fetchTokens()
         setNewToken({
           name: "",
           totalQuota: 1000,
           modelRestriction: "gpt-3.5-turbo",
-          status: "active",
+          status: 1,
           groupId: 1,
         })
         setIsCreateOpen(false)
       }
     } catch (error) {
       console.error('Failed to create token:', error)
-      toast({
-        variant: "destructive",
-        description: "Token创建失败",
-      })
+      toast.error("Token创建失败")
     }
   }
 
   const handleEdit = async () => {
     if (!currentToken) return
     try {
-      const response = await axios.put(`${BASE_URL}/tokens/${id}`, currentToken)
+      const response = await axios.put(`${BASE_URL}/tokens/${currentToken.id}`, currentToken)
       if (response.status === 200) {
-        toast({
-          description: "Token更新成功",
-        })
+        toast.success("Token更新成功")
         fetchTokens()
         setIsEditOpen(false)
         setCurrentToken(null)
       }
     } catch (error) {
       console.error('Failed to update token:', error)
-      toast({
-        variant: "destructive",
-        description: "Token更新失败",
-      })
+      toast.error("Token更新失败")
     }
   }
   
+  const handleStatusChange = async (tokenId: number, checked: boolean) => {
+    try {
+      const token = tokens.find(token => token.id === tokenId)
+      if (!token) return
+
+      setTokens(prevTokens => 
+        prevTokens.map(a => 
+          a.id === tokenId ? { ...a, status: checked ? 1 : 0 } : a
+        )
+      )
+
+      const response = await axios.put(
+        `${BASE_URL}/tokens/${tokenId}/status?status=${checked ? 1 : 0}`
+      );
+      if (response.data.code === 200) {
+        toast.success('状态更新成功')
+      }
+    } catch (error) {
+
+      setTokens(prevTokens => 
+        prevTokens.map(a => 
+          a.id === tokenId ? { ...a, status: !checked ? 1 : 0 } : a
+        )
+      )
+
+      console.error('Failed to update status:', error)
+      toast.error('更新状态失败')
+    }
+  }
+
   const handleDelete = async () => {
     if (!deleteToken?.id) return
     
     try {
-      const response = await axios.delete(`${BASE_URL}/tokens/${deleteToken.id}`)
+      const response = await axios.put(`${BASE_URL}/tokens/${deleteToken.id}/delete`)
       if (response.status === 200) {
-        toast({
-          description: "Token删除成功",
-        })
+        toast.success("Token删除成功")
         fetchTokens()
         setIsDeleteOpen(false)
         setDeleteToken(null)
       }
     } catch (error) {
       console.error('Failed to delete token:', error)
-      toast({
-        variant: "destructive",
-        description: "Token删除失败",
-      })
+      toast.error("Token删除失败")
     }
   }
+
+
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
@@ -261,7 +278,12 @@ export default function TokensPage() {
                     <TableCell>{token.name}</TableCell>
                     <TableCell>{token.usedQuota}/{token.totalQuota}</TableCell>
                     <TableCell>{token.modelRestriction}</TableCell>
-                    <TableCell>{token.status}</TableCell>
+                    <TableCell>
+                    <Switch
+                        checked={token.status === 1}
+                        onCheckedChange={(checked) => handleStatusChange(token.id, checked)}
+                      />
+                    </TableCell>
                     <TableCell>{new Date(token.expiresAt).toLocaleDateString()}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">

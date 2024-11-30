@@ -42,9 +42,9 @@ import {
 } from "@/components/ui/select"
 import { useEffect, useState } from "react"
 import { Switch } from "@/components/ui/switch"
-import { useToast } from "@/hooks/use-toast"
 import { Pencil, Trash2 } from "lucide-react"
 import axios from "@/lib/axios-config"
+import { toast } from "react-hot-toast"
 
 interface ApiInfo {
   id: number
@@ -67,7 +67,6 @@ export default function ApisPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [currentApi, setCurrentApi] = useState<ApiInfo | null>(null)
-  const { toast } = useToast()
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
   const [deleteApi, setDeleteApi] = useState<ApiInfo | null>(null)
   const [newApi, setNewApi] = useState<Partial<ApiInfo>>({
@@ -110,10 +109,8 @@ export default function ApisPage() {
           'Content-Type': 'application/json'
         }
       });
-      if (response.data.code === 200) {
-        toast({
-          description: "API创建成功",
-        })
+      if (response.data === true) {
+        toast.success("API创建成功")
         fetchApis()
         setNewApi({
           name: "",
@@ -129,53 +126,45 @@ export default function ApisPage() {
       }
     } catch (error) {
       console.error('Failed to create API:', error)
-      toast({
-        variant: "destructive",
-        description: "API创建失败",
-      })
+      toast("API创建失败", { icon: "error" })
     }
   }
 
   const handleEdit = async () => {
     if (!currentApi) return
     try {
-      const response = await axios.put(`${BASE_URL}/api-info`);
-      if (response.data.code === 200) {
-        toast({
-          description: "API更新成功",
-        })
+      const response = await axios.put(`${BASE_URL}/api-info`, currentApi, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      if (response.data === true) {
+        toast.success("API更新成功")
         fetchApis()
         setIsEditOpen(false)
         setCurrentApi(null)
       }
     } catch (error) {
       console.error('Failed to update API:', error)
-      toast({
-        variant: "destructive",
-        description: "API更新失败",
-      })
+      toast("API更新失败", { icon: "error" })
     }
-  }
+}
+
   
   const handleDelete = async () => {
     if (!deleteApi?.id) return
     
     try {
       const response = await axios.delete(`${BASE_URL}/api-info/${deleteApi.id}`);
-      if (response.data.code === 200) {
-        toast({
-          description: "API删除成功",
-        })
+      if (response.data === true) {
+        toast.success("API删除成功")
         fetchApis()
         setIsDeleteOpen(false)
         setDeleteApi(null)
       }
     } catch (error) {
       console.error('Failed to delete API:', error)
-      toast({
-        variant: "destructive",
-        description: "API删除失败",
-      })
+      toast("API删除失败", { icon: "error" })
     }
   }
   
@@ -183,30 +172,31 @@ export default function ApisPage() {
     try {
       const api = apis.find(api => api.id === id)
       if (!api) return
+
+      setApis(prevApis => 
+        prevApis.map(a => 
+          a.id === id ? { ...a, status: checked ? 1 : 0 } : a
+        )
+      )
   
       const response = await axios.put(`${BASE_URL}/api-info`, {
         ...api,
         status: checked ? 1 : 0
-      }, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
       });
       
-      if (response.data.code === 200) {
-        toast({
-          description: "状态更新成功",
-        })
-        fetchApis()
+      if (response.data === true) {
+        toast.success("状态更新成功")
       }
     } catch (error) {
+      setApis(prevApis => 
+        prevApis.map(a => 
+          a.id === id ? { ...a, status: !checked ? 1 : 0 } : a
+        )
+      )
       console.error('Failed to update status:', error)
-      toast({
-        variant: "destructive",
-        description: "状态更新失败",
-      })
+      toast("状态更新失败", { icon: "error" })
     }
-  }
+}
 
 
   return (

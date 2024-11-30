@@ -74,4 +74,17 @@ public class TokensController {
         List<TokensVO> tokensList = tokensService.getTokensList(currentPage, pageSize);
         return ResultUtils.success(tokensList);
     }
+
+    /**
+     * 更新令牌状态
+     * @param id 令牌 id
+     */
+    @PutMapping("/{id}/status")
+    public BaseResponse<Boolean> updateTokensStatus(
+            @PathVariable Long id,
+            @RequestParam Integer status
+    ) {
+        boolean result = tokensService.updateTokensStatus(id, status);
+        return ResultUtils.success(result);
+    }
 }

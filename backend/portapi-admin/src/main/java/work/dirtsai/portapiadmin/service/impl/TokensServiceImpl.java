@@ -56,4 +56,15 @@ public class TokensServiceImpl extends ServiceImpl<TokensMapper, Tokens> impleme
         }).collect(Collectors.toList());
     }
 
+    @Override
+    public boolean updateTokensStatus(Long id, Integer status) {
+        Tokens tokens = this.getById(id);
+        if (tokens == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "令牌不存在");
+        }
+
+        tokens.setStatus(status);
+        return this.updateById(tokens);
+    }
+
 }

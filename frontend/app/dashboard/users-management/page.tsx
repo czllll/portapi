@@ -41,9 +41,9 @@ import {
 } from "@/components/ui/select"
 import { useEffect, useState } from "react"
 import { Switch } from "@/components/ui/switch"
-import { useToast } from "@/hooks/use-toast"
 import { Pencil, Trash2 } from "lucide-react"
 import axios from "@/lib/axios-config"
+import toast from "react-hot-toast"
 
 interface User {
     userId: number
@@ -65,19 +65,11 @@ export default function UsersPage() {
   const BASE_URL = process.env.NEXT_PUBLIC_BASE_API_URL
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
-  const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [currentUser, setCurrentUser] = useState<User | null>(null)
-  const { toast } = useToast()
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
   const [deleteUser, setDeleteUser] = useState<User | null>(null)
-  const [newUser, setNewUser] = useState<Partial<User>>({
-    username: "",
-    email: "",
-    role: "user",
-    status: 1
-  })
-
+  
   const fetchUsers = async () => {
     try {
       setLoading(true)
@@ -99,48 +91,36 @@ export default function UsersPage() {
   const handleEdit = async () => {
     if (!currentUser) return
     try {
-      const response = await fetch(`${BASE_URL}/user/${currentUser.userId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(currentUser)
-      })
-      if (response.ok) {
-        toast({
-          description: "用户更新成功",
-        })
+      const response = await axios.put(`${BASE_URL}/user/${currentUser.userId}`, currentUser, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      if (response.status === 200) {
+        toast.success('用户更新成功')
         fetchUsers()
         setIsEditOpen(false)
         setCurrentUser(null)
       }
     } catch (error) {
       console.error('Failed to update user:', error)
-      toast({
-        variant: "destructive",
-        description: "用户更新失败",
-      })
+      toast.error('用户更新失败')
     }
   }
 
   const handleDelete = async () => {
     if (!deleteUser?.userId) return
     try {
-      const response = await fetch(`${BASE_URL}/user/${deleteUser.userId}/delete`, {
-        method: 'PUT'
-      })
-      if (response.ok) {
-        toast({
-          description: "用户删除成功",
-        })
+      const response = await axios.put(`${BASE_URL}/user/${deleteUser.userId}/delete`);
+      if (response.data.code === 200) {
+        toast.success('用户删除成功')
         fetchUsers()
         setIsDeleteOpen(false)
         setDeleteUser(null)
       }
     } catch (error) {
       console.error('Failed to delete user:', error)
-      toast({
-        variant: "destructive",
-        description: "用户删除失败",
-      })
+      toast.success('用户删除失败')
     }
   }
 
@@ -149,22 +129,28 @@ export default function UsersPage() {
       const user = users.find(user => user.userId === userId)
       if (!user) return
 
-      const response = await fetch(`${BASE_URL}/user/${user.userId}/status?status=${checked ? 1 : 0}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' }
-      })
-      if (response.ok) {
-        toast({
-          description: "状态更新成功",
-        })
-        fetchUsers()
+      setUsers(prevUsers => 
+        prevUsers.map(a => 
+          a.userId === userId ? { ...a, status: checked ? 1 : 0 } : a
+        )
+      )
+
+      const response = await axios.put(
+        `${BASE_URL}/user/${user.userId}/status?status=${checked ? 1 : 0}`
+      );
+      if (response.data.code === 200) {
+        toast.success('状态更新成功')
       }
     } catch (error) {
+
+      setUsers(prevUsers => 
+        prevUsers.map(a => 
+          a.userId === userId ? { ...a, status: !checked ? 1 : 0 } : a
+        )
+      )
+
       console.error('Failed to update status:', error)
-      toast({
-        variant: "destructive",
-        description: "状态更新失败",
-      })
+      toast.error('更新状态失败')
     }
   }
 

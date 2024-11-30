@@ -14,7 +14,7 @@ public class TokensVO {
     private Integer totalQuota;
     private Integer usedQuota;
     private String modelRestriction;
-    private Byte status;
+    private Integer status;
     private Long groupId;
     private Date createdTime;
     private Date updatedTime;

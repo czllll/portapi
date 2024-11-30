@@ -18,10 +18,10 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
     (response) => response,
     (error) => {
-      if (error.response?.status === 401) {
+      if (error.response?.status === 401 || error.response?.status === 500) {
         localStorage.removeItem('token')
         toast.error('登录状态已过期，请重新登录')
-        window.location.href = '/login'
+        window.location.href = '/auth/login'
       }
       return Promise.reject(error)
     }
