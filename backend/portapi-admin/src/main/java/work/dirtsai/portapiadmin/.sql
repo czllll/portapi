@@ -46,3 +46,19 @@ CREATE TABLE `tokens` (
                           KEY `group_id` (`group_id`),
                           CONSTRAINT `tokens_ibfk_1` FOREIGN KEY (`group_id`) REFERENCES `token_groups` (`id`) ON DELETE SET NULL
 );
+
+-- 创建models表
+use portapi_db;
+create table models (
+                        id int primary key auto_increment,
+                        model_id int not null,
+                        model_name varchar(255) not null,
+                        model_company varchar(255) not null,
+                        model_version varchar(255) not null,
+                        real_api_key varchar(255) not null,
+                        remain_quote decimal not null,
+                        is_deleted tinyint not null default 0,
+                        created_time timestamp not null default current_timestamp,
+                        updated_time timestamp not null default current_timestamp
+
+)

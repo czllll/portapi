@@ -3,14 +3,14 @@ package work.dirtsai.portapiadmin.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 import work.dirtsai.portapiadmin.common.ErrorCode;
+import work.dirtsai.portapiadmin.common.Utils;
 import work.dirtsai.portapiadmin.exception.BusinessException;
 import work.dirtsai.portapiadmin.mapper.TokensMapper;
 import work.dirtsai.portapiadmin.model.entity.Tokens;
-import work.dirtsai.portapiadmin.model.entity.User;
 import work.dirtsai.portapiadmin.model.vo.TokensVO;
-import work.dirtsai.portapiadmin.model.vo.UserVO;
 import work.dirtsai.portapiadmin.service.TokensService;
 
 import java.util.List;
@@ -18,6 +18,9 @@ import java.util.stream.Collectors;
 
 @Service
 public class TokensServiceImpl extends ServiceImpl<TokensMapper, Tokens> implements TokensService {
+
+    @Resource
+    private Utils utils;
 
     @Override
     public boolean deleteTokensById(Long id) {
@@ -31,13 +34,16 @@ public class TokensServiceImpl extends ServiceImpl<TokensMapper, Tokens> impleme
     }
 
     @Override
-    public List<TokensVO> getTokensList(Integer current, Integer size){
+    public List<TokensVO> getTokensList(Integer current, Integer size, Integer userId){
         Page<Tokens> page = new Page<>(current, size);
         Page<Tokens> tokensPage = this.page(page, new QueryWrapper<>());
 
         // 筛选出非is_deleted的用户
         tokensPage.getRecords().removeIf(tokens -> tokens.getIsDeleted() == 1);
-
+        // 筛选当前用户的令牌
+        if (userId != null) {
+            tokensPage.getRecords().removeIf(tokens -> !tokens.getUserId().equals(userId));
+        }
         return tokensPage.getRecords().stream().map(tokens -> {
 
             TokensVO tokensVO = new TokensVO();
@@ -65,6 +71,23 @@ public class TokensServiceImpl extends ServiceImpl<TokensMapper, Tokens> impleme
 
         tokens.setStatus(status);
         return this.updateById(tokens);
+    }
+
+    @Override
+    public boolean createTokens(TokensVO tokenVO){
+        Tokens tokens = new Tokens();
+
+        tokens.setTokenNumber(utils.generateKey());
+        tokens.setName(tokenVO.getName());
+        tokens.setExpiresAt(tokenVO.getExpiresAt());
+        tokens.setTotalQuota(tokenVO.getTotalQuota());
+        tokens.setModelRestriction(tokenVO.getModelRestriction());
+        tokens.setGroupId(tokenVO.getGroupId());
+        tokens.setStatus(tokenVO.getStatus());
+        tokens.setIsDeleted(0);
+        tokens.setUserId(tokenVO.getUserId());
+
+        return this.save(tokens);
     }
 
 }

@@ -10,8 +10,10 @@ public interface TokensService  extends IService<Tokens> {
 
     boolean deleteTokensById(Long id);
 
-    List<TokensVO> getTokensList(Integer current, Integer size);
+    List<TokensVO> getTokensList(Integer current, Integer size, Integer userId);
 
     boolean updateTokensStatus(Long id, Integer status);
+
+    boolean createTokens(TokensVO tokenVO);
 
 }

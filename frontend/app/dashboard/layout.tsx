@@ -1,7 +1,8 @@
 'use client'
 import Header from "@/components/header"
 import Sidebar from "@/components/sidebar"
-import { useState } from "react"
+import useUserStore from "@/stores/useUserStore"
+import { useEffect, useState } from "react"
 
 export default function DashboardLayout({
   children,
@@ -9,7 +10,8 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
-
+  const { user, loading, error, fetchUser } = useUserStore();
+  useEffect(() => { fetchUser() }, [])
   return (
     <div className="min-h-screen bg-background flex">
       <Sidebar 

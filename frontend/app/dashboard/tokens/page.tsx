@@ -41,25 +41,47 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useEffect, useState } from "react"
-import { Pencil, Trash2 } from "lucide-react"
+import { CalendarIcon, Pencil, Trash2 } from "lucide-react"
 import axios from "@/lib/axios-config"
 import { toast } from "react-hot-toast"
 import { Switch } from "@/components/ui/switch"
+import React from 'react';
+import MultipleSelector, { Option } from '@/components/ui/multiple-selector';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
+import { Calendar } from "@/components/ui/calendar"
+import { format, set } from "date-fns"
+import useUserStore from "@/stores/useUserStore"
+
+
+const MODEL_RESTRICTION_OPTIONS: Option[] = [
+  { label: 'nextjs', value: 'Nextjs' },
+  { label: 'Vite', value: 'vite', disable: true },
+  { label: 'Nuxt', value: 'nuxt', disable: true },
+  { label: 'Vue', value: 'vue, disable: true', disable: true },
+  { label: 'Remix', value: 'remix' },
+  { label: 'Svelte', value: 'svelte', disable: true },
+  { label: 'Angular', value: 'angular', disable: true },
+  { label: 'Ember', value: 'ember', disable: true },
+  { label: 'React', value: 'react' },
+  { label: 'Gatsby', value: 'gatsby', disable: true },
+  { label: 'Astro', value: 'astro', disable: true },
+];
 
 interface Token {
   id: number
   tokenNumber: string
   name: string
   userId: number
-  expiresAt: string
+  expiresAt: Date
   totalQuota: number
   usedQuota: number
   modelRestriction: string
   status: number
   groupId: number
   isDeleted: boolean
-  createdTime: string
-  updatedTime: string
+  createdTime: Date
+  updatedTime: Date
 }
 
 export default function TokensPage() {
@@ -71,21 +93,19 @@ export default function TokensPage() {
   const [currentToken, setCurrentToken] = useState<Token | null>(null)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
   const [deleteToken, setDeleteToken] = useState<Token | null>(null)
-  const [newToken, setNewToken] = useState<Partial<Token>>({
-    name: "",
-    totalQuota: 1000,
-    modelRestriction: "gpt-3.5-turbo",
-    status: 1,
-    groupId: 1,
-  })
+  const {user} = useUserStore();
+  const [newToken, setNewToken] = useState<Partial<Token>>()
 
   const fetchTokens = async () => {
+    if (!user) return;
     try {
       setLoading(true)
+      console.log("=====",user)
       const response = await axios.get(`${BASE_URL}/tokens/page`, {
         params: {
           current: 1,
-          size: 10
+          size: 10,
+          userId: user?.userId
         }
       });
         setTokens(response.data.data)    
@@ -95,23 +115,37 @@ export default function TokensPage() {
       setLoading(false)
     }
   }
-
   useEffect(() => {
-    fetchTokens()
-  }, [])
+    if (user) {
+      fetchTokens(); 
+      setNewToken({
+        name: "",
+        expiresAt: new Date(new Date().setFullYear(new Date().getFullYear() + 100)),
+        totalQuota: 1000,
+        modelRestriction: "gpt-3.5-turbo",
+        status: 1,
+        userId: user.userId,
+        groupId: 1,
+      })
+      console.log("====4",newToken?.expiresAt)
+    }
+  }, [user]);
+
 
   const handleCreate = async () => {
     try {
-      const response = await axios.post(`${BASE_URL}/tokens`, newToken)
+      const response = await axios.post(`${BASE_URL}/tokens/create`, newToken)
       if (response.status === 200) {
         toast.success("Token创建成功")
         fetchTokens()
         setNewToken({
           name: "",
           totalQuota: 1000,
+          expiresAt: new Date(new Date().setFullYear(new Date().getFullYear() + 100)),
           modelRestriction: "gpt-3.5-turbo",
           status: 1,
-          groupId: 1,
+          groupId: 2,
+          userId: user?.userId
         })
         setIsCreateOpen(false)
       }
@@ -184,6 +218,19 @@ export default function TokensPage() {
     }
   }
 
+  //获取model列表
+  const fetchModelRestrictions = async (): Promise<Option[]> => {
+    try {
+      const response = await fetch('/api/models/list');
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching model restrictions:', error);
+      return [];
+    }
+  };
 
 
   return (
@@ -202,41 +249,73 @@ export default function TokensPage() {
               <div className="grid gap-2">
                 <label>Name</label>
                 <Input
-                  value={newToken.name}
+                  value={newToken?.name}
                   onChange={(e) => setNewToken({ ...newToken, name: e.target.value })}
+                  required
                 />
               </div>
               <div className="grid gap-2">
                 <label>Total Quota</label>
                 <Input
                   type="number"
-                  value={newToken.totalQuota}
+                  value={newToken?.totalQuota}
                   onChange={(e) => setNewToken({ ...newToken, totalQuota: parseInt(e.target.value) })}
                 />
               </div>
               <div className="grid gap-2">
                 <label>Model Restriction</label>
+                <MultipleSelector
+                  defaultOptions={MODEL_RESTRICTION_OPTIONS}
+                  placeholder="Model Restriction"
+                  emptyIndicator={
+                    <p className="text-center text-lg leading-10 text-gray-600 dark:text-gray-400">
+                      no results found.
+                    </p>
+                  }
+                />
+              </div>
+              <div className="grid gap-2">
+                <label>Expired Time</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-[280px] justify-start text-left font-normal",
+                        !newToken?.expiresAt && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon />
+                      {newToken?.expiresAt ? format(newToken?.expiresAt, "PPP") : <span>Pick a date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={newToken?.expiresAt}
+                      onSelect={(e) => {
+                        setNewToken({ ...newToken, expiresAt: e }); 
+                      }}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+
+              </div>
+              <div className="grid gap-2">
+                <label>Group</label>
                 <Select
-                  value={newToken.modelRestriction}
-                  onValueChange={(value) => setNewToken({ ...newToken, modelRestriction: value })}
+                  value={newToken?.groupId === 1 ? "VIP" : "Normal"}
+                  onValueChange={(value) => setNewToken({ ...newToken, groupId: value == "VIP" ? 1 : 2 })}
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="gpt-3.5-turbo">GPT-3.5-Turbo</SelectItem>
-                    <SelectItem value="gpt-4">GPT-4</SelectItem>
-                    <SelectItem value="gpt-3.5-turbo,gpt-4">Both</SelectItem>
+                    <SelectItem value="VIP">VIP</SelectItem>
+                    <SelectItem value="Normal">Normal</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-              <div className="grid gap-2">
-                <label>Group ID</label>
-                <Input
-                  type="number"
-                  value={newToken.groupId}
-                  onChange={(e) => setNewToken({ ...newToken, groupId: parseInt(e.target.value) })}
-                />
               </div>
             </div>
             <DialogFooter>
@@ -345,7 +424,7 @@ export default function TokensPage() {
             </div>
             <div className="grid gap-2">
               <label>Model Restriction</label>
-              <Select
+              {/* <Select
                 value={currentToken?.modelRestriction}
                 onValueChange={(value) =>
                   setCurrentToken(currentToken ? { ...currentToken, modelRestriction: value } : null)
@@ -359,7 +438,16 @@ export default function TokensPage() {
                   <SelectItem value="gpt-4">GPT-4</SelectItem>
                   <SelectItem value="gpt-3.5-turbo,gpt-4">Both</SelectItem>
                 </SelectContent>
-              </Select>
+              </Select> */}
+              <MultipleSelector
+                defaultOptions={MODEL_RESTRICTION_OPTIONS}
+                placeholder="Model Restriction"
+                emptyIndicator={
+                  <p className="text-center text-lg leading-10 text-gray-600 dark:text-gray-400">
+                    no results found.
+                  </p>
+                }
+              />
             </div>
           </div>
           <DialogFooter>

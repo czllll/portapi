@@ -11,24 +11,11 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { User } from "@/types/user";
-import { useEffect, useState } from "react";
-import axios from "@/lib/axios-config";
+import useUserStore from "@/stores/useUserStore";
 
 interface SidebarProps {
   isOpen: boolean;
   onToggle: () => void;
-}
-
-
-const defaultUser: User = {
-  userId: 0,
-  username: '',
-  email: '',
-  token: '',
-  avatar: null,
-  role: '',
-  status: null
 }
 
 const menuItems = [
@@ -69,37 +56,10 @@ const menuItems = [
 
 export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
   const pathname = usePathname();
-  const [, setLoading] = useState(true)
-  const [userProfile, setUserProfile] = useState<User>(defaultUser)
-  const BASE_URL = process.env.NEXT_PUBLIC_BASE_API_URL
-  useEffect(() => {
-    const initData = async () => {
-      try {
-        await Promise.all([
-          fetchUserProfile(),
-        ])
-      } catch (error) {
-        console.error('Failed to initialize data:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    initData()
-  }, [])
-
-  const fetchUserProfile = async () => {
-    try {
-      const response = await axios.get(`${BASE_URL}/user/current`);
-      const data = response.data.data;
-      setUserProfile(data)
-    } catch (error) {
-      console.error('Failed to fetch user profile:', error)
-    }
-  }
+  const {user} = useUserStore();
 
   const filteredMenuItems = menuItems.filter(item => {
-    return item.role.includes(userProfile.role);
+    return item.role.includes(user?.role || "");
   });
   
   return (

@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 
 import { User } from '../types/user'
-import axios from 'axios'
+import axios from "@/lib/axios-config"
 
 interface UserStore {
   user: User | null
@@ -23,7 +23,10 @@ const useUserStore = create<UserStore>((set) => ({
     set({ loading: true, error: null })
     try {
       const response = await axios.get(`${BASE_API_URL}/user/current`)
-      set({ user: response.data, loading: false })
+      if (response.data.code !== 200) {
+        throw new Error(response.data.message)
+      }
+      set({ user: response.data.data, loading: false })
     } catch (error: unknown) {
         if (error instanceof Error) {
           set({ error: error.message, loading: false })
@@ -39,4 +42,4 @@ const useUserStore = create<UserStore>((set) => ({
   logout: () => set({ user: null })
 }))
 
-export default useUserStore
+export default useUserStore;

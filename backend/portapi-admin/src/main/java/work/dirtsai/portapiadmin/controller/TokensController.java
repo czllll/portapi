@@ -18,12 +18,13 @@ public class TokensController {
     private TokensService tokensService;
     /**
      * 新增令牌
-     * @param tokens 令牌
+     * @param tokensVO 令牌
      */
-    @PostMapping("/")
-    public void save(@RequestBody Tokens tokens) {
-        // 保存令牌
-        tokensService.save(tokens);
+    @PostMapping("/create")
+    public BaseResponse<Boolean> save(@RequestBody TokensVO tokensVO) {
+
+        boolean result = tokensService.createTokens(tokensVO);
+        return ResultUtils.success(result);
     }
 
     /**
@@ -69,9 +70,10 @@ public class TokensController {
     @GetMapping("/page")
     public BaseResponse<List<TokensVO>> page(
             @RequestParam (defaultValue = "1") Integer currentPage,
-            @RequestParam(defaultValue = "10") Integer pageSize) {
+            @RequestParam(defaultValue = "10") Integer pageSize,
+            @RequestParam Integer userId) {
         // 分页查询令牌
-        List<TokensVO> tokensList = tokensService.getTokensList(currentPage, pageSize);
+        List<TokensVO> tokensList = tokensService.getTokensList(currentPage, pageSize, userId);
         return ResultUtils.success(tokensList);
     }
 
