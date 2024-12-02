@@ -95,12 +95,12 @@ export default function TokensPage() {
   const [deleteToken, setDeleteToken] = useState<Token | null>(null)
   const {user} = useUserStore();
   const [newToken, setNewToken] = useState<Partial<Token>>()
+  const [modelRestrictionOptions, setModelRestrictionOptions] = useState([]);
 
   const fetchTokens = async () => {
     if (!user) return;
     try {
       setLoading(true)
-      console.log("=====",user)
       const response = await axios.get(`${BASE_URL}/tokens/page`, {
         params: {
           current: 1,
@@ -127,8 +127,9 @@ export default function TokensPage() {
         userId: user.userId,
         groupId: 1,
       })
-      console.log("====4",newToken?.expiresAt)
+      fetchModelRestrictions();
     }
+    
   }, [user]);
 
 
@@ -219,16 +220,22 @@ export default function TokensPage() {
   }
 
   //获取model列表
-  const fetchModelRestrictions = async (): Promise<Option[]> => {
+  const fetchModelRestrictions = async () => {
     try {
-      const response = await fetch('/api/models/list');
-      if (!response.ok) {
+      const response = await axios.get(`${BASE_URL}/model/list`);
+      if (!(response.status === 200)) {
         throw new Error('Network response was not ok');
       }
-      return await response.json();
+      const options = response.data.map((item: { modelName: any; modelId: any; isDeleted: any }) => ({
+        label: item.modelName, 
+        value: item.modelName,   
+        disable: item.isDeleted || false, 
+      }));
+      setModelRestrictionOptions(options);
+      return await response.data;
     } catch (error) {
       console.error('Error fetching model restrictions:', error);
-      return [];
+      setModelRestrictionOptions([]);
     }
   };
 
@@ -265,13 +272,17 @@ export default function TokensPage() {
               <div className="grid gap-2">
                 <label>Model Restriction</label>
                 <MultipleSelector
-                  defaultOptions={MODEL_RESTRICTION_OPTIONS}
+                  defaultOptions={modelRestrictionOptions}
                   placeholder="Model Restriction"
                   emptyIndicator={
                     <p className="text-center text-lg leading-10 text-gray-600 dark:text-gray-400">
                       no results found.
                     </p>
                   }
+                  onChange={(option) => {
+                    setNewToken({ ...newToken, modelRestriction: 
+                        option.map((item) => item.value).join(",") });
+                  }}
                 />
               </div>
               <div className="grid gap-2">
@@ -424,30 +435,73 @@ export default function TokensPage() {
             </div>
             <div className="grid gap-2">
               <label>Model Restriction</label>
-              {/* <Select
-                value={currentToken?.modelRestriction}
-                onValueChange={(value) =>
-                  setCurrentToken(currentToken ? { ...currentToken, modelRestriction: value } : null)
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="gpt-3.5-turbo">GPT-3.5-Turbo</SelectItem>
-                  <SelectItem value="gpt-4">GPT-4</SelectItem>
-                  <SelectItem value="gpt-3.5-turbo,gpt-4">Both</SelectItem>
-                </SelectContent>
-              </Select> */}
               <MultipleSelector
-                defaultOptions={MODEL_RESTRICTION_OPTIONS}
+                defaultOptions={modelRestrictionOptions}
                 placeholder="Model Restriction"
                 emptyIndicator={
                   <p className="text-center text-lg leading-10 text-gray-600 dark:text-gray-400">
                     no results found.
                   </p>
                 }
+                onChange={(option) => {
+                  setCurrentToken(currentToken ? {
+                    ...currentToken,
+                    modelRestriction: option.map((item) => item.value).join(",")
+                  } : null);
+                }}
               />
+            </div>
+            <div className="grid gap-2">
+              <label>Expired Time</label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className={cn(
+                      "w-[280px] justify-start text-left font-normal",
+                      !currentToken?.expiresAt && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon />
+                    {currentToken?.expiresAt ? format(new Date(currentToken.expiresAt), "PPP") : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={currentToken?.expiresAt ? new Date(currentToken.expiresAt) : new Date()}
+                  onSelect={(e) => {
+                    if (e && currentToken) {
+                      setCurrentToken({ 
+                        ...currentToken, 
+                        expiresAt: e 
+                      });
+                    }
+                  }}
+                  initialFocus
+                />
+                </PopoverContent>
+              </Popover>
+            </div>
+            <div className="grid gap-2">
+              <label>Group</label>
+              <Select
+                value={currentToken?.groupId === 1 ? "VIP" : "Normal"}
+                onValueChange={(value) => 
+                  setCurrentToken(currentToken ? { 
+                    ...currentToken, 
+                    groupId: value === "VIP" ? 1 : 2 
+                  } : null)
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="VIP">VIP</SelectItem>
+                  <SelectItem value="Normal">Normal</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <DialogFooter>
@@ -458,6 +512,7 @@ export default function TokensPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
 
       <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
         <AlertDialogContent>

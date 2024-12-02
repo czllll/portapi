@@ -57,6 +57,7 @@ public class TokensServiceImpl extends ServiceImpl<TokensMapper, Tokens> impleme
             tokensVO.setTotalQuota(tokens.getTotalQuota());
             tokensVO.setUsedQuota(tokens.getUsedQuota());
             tokensVO.setGroupId(tokens.getGroupId());
+            tokensVO.setModelRestriction(tokens.getModelRestriction());
             return tokensVO;
 
         }).collect(Collectors.toList());
