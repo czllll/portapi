@@ -91,4 +91,21 @@ public class TokensServiceImpl extends ServiceImpl<TokensMapper, Tokens> impleme
         return this.save(tokens);
     }
 
+
+    @Override
+    public boolean updateTokensQuato(String tokenNumber, Integer consumeQuota) {
+
+        Tokens tokens = this.getByTokenNumber(tokenNumber);
+        if (tokens == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "令牌不存在");
+        }
+
+        tokens.setUsedQuota(tokens.getUsedQuota() + consumeQuota);
+
+        return this.updateById(tokens);
+    }
+
+    private Tokens getByTokenNumber(String tokenNumber) {
+        return this.getOne(new QueryWrapper<Tokens>().eq("token_number", tokenNumber));
+    }
 }

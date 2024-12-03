@@ -7,7 +7,7 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import work.dirtsai.portapiadmin.common.BaseResponse;
+import work.dirtsai.common.common.BaseResponse;
 import work.dirtsai.portapiadmin.common.ErrorCode;
 import work.dirtsai.portapiadmin.common.ResultUtils;
 import work.dirtsai.portapiadmin.exception.BusinessException;

@@ -2,7 +2,8 @@ package work.dirtsai.portapiadmin.controller;
 
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
-import work.dirtsai.portapiadmin.common.BaseResponse;
+import work.dirtsai.common.common.BaseResponse;
+import work.dirtsai.common.common.UpdateQuotaRequest;
 import work.dirtsai.portapiadmin.common.ResultUtils;
 import work.dirtsai.portapiadmin.model.entity.Tokens;
 import work.dirtsai.portapiadmin.model.vo.TokensVO;
@@ -87,6 +88,20 @@ public class TokensController {
             @RequestParam Integer status
     ) {
         boolean result = tokensService.updateTokensStatus(id, status);
+        return ResultUtils.success(result);
+    }
+
+    /**
+     * 更新令牌配额
+     * @param updateQuotaRequest 更新配额请求
+     *                           tokenNumber 令牌编号
+     *                           consumedQuota 消耗配额
+     */
+    @PutMapping("/quota")
+    public BaseResponse<Boolean> updateTokensQuota(@RequestBody UpdateQuotaRequest updateQuotaRequest) {
+        String tokenNumber = updateQuotaRequest.getTokenNumber();
+        Integer consumeQuota = updateQuotaRequest.getConsumedQuota();
+        boolean result = tokensService.updateTokensQuato(tokenNumber, consumeQuota);
         return ResultUtils.success(result);
     }
 }

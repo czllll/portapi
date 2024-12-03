@@ -1,4 +1,4 @@
-package work.dirtsai.portapiadmin.common;
+package work.dirtsai.common.common;
 import lombok.Data;
 import java.io.Serializable;
 

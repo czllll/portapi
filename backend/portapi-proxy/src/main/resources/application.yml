@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: portapi-proxy
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+  data:
+    redis:
+      host: localhost
+      port: 6379
+server:
+    port: 8090
+
+internal:
+  secret: ${INTERNAL_SECRET:xHXYRaxYUJ6OYmFPPn0+j2aepYTWsxNzeG1vNwPnKLs=}
+
+jwt:
+  secret: Aoo/Lv+crFTY5wYzalGw5Pab6FVEYy/xnYZKGSjIvY4=
+  expiration: 3600000
+
+logging:
+  level:
+    work.dirtsai.portapiproxy.feign.AdminClient: DEBUG
+feign:
+  client:
+    config:
+      default:
+        loggerLevel: FULL

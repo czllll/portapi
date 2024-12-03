@@ -1,4 +1,4 @@
-package work.dirtsai.portapiadmin.portapiproxy.config;
+package work.dirtsai.portapiproxy.config;
 
 import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;

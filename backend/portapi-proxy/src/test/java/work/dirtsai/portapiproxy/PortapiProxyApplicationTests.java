@@ -1,4 +1,4 @@
-package work.dirtsai.portapiadmin.portapiproxy;
+package work.dirtsai.portapiproxy;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

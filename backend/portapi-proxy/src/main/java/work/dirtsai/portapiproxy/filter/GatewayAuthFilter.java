@@ -1,16 +1,13 @@
-package work.dirtsai.portapiadmin.filter;
+package work.dirtsai.portapiproxy.filter;
 
-import jakarta.annotation.Resource;
+import com.alibaba.nacos.common.utils.StringUtils;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.HmacUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.ReactiveRedisOperations;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -40,11 +37,12 @@ public class GatewayAuthFilter implements Filter {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
 
-//        //验证签名
+        //验证签名
 //        if (!verifyInternalAuth(httpRequest)) {
 //            httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 //            return;
 //        }
+
         chain.doFilter(request, response);
     }
 

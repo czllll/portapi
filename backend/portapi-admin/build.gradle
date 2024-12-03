@@ -38,6 +38,7 @@ dependencies {
     // Spring Cloud & Alibaba
     implementation 'org.springframework.cloud:spring-cloud-starter-bootstrap'
     implementation 'com.alibaba.cloud:spring-cloud-starter-alibaba-nacos-discovery'
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
 
     // MyBatis-Plus
     implementation 'com.baomidou:mybatis-plus-boot-starter:3.5.9'
@@ -55,7 +56,6 @@ dependencies {
     // BCrypt
     implementation 'org.mindrot:jbcrypt:0.4'
 
-    // Redis 连接池
     implementation 'org.apache.commons:commons-pool2:2.12.0'
 
     // JWT

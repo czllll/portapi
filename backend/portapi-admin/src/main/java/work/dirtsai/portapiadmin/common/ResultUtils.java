@@ -1,5 +1,7 @@
 package work.dirtsai.portapiadmin.common;
 
+import work.dirtsai.common.common.BaseResponse;
+
 public class ResultUtils {
 
     public static <T> BaseResponse<T> success(T data) {

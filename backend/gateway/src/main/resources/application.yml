@@ -27,9 +27,11 @@ spring:
         - id: admin_route
           uri: lb://portapi-admin1
           predicates:
+            - Path=/api/**
+        - id: proxy_route
+          uri: lb://portapi-proxy
+          predicates:
             - Path=/**
-          filters:
-            - AddRequestHeader=X-Gateway-Token, ${gateway.secret}
 
 
 
