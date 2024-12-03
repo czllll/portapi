@@ -7,7 +7,8 @@ import {
   CodeIcon,
   CloudIcon,
   Users,
-  KeySquare
+  KeySquare,
+  Component
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -44,6 +45,12 @@ const menuItems = [
     icon: KeySquare,
     href: "/dashboard/tokens",
     role: ["admin", "user"]
+  },
+  {
+    title: "Channels",
+    icon: Component,
+    href: "/dashboard/channels",
+    role: ["admin"]
   },
   {
     title: "Settings",

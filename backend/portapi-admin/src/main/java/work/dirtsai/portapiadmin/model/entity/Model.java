@@ -25,7 +25,7 @@ public class Model {
 
     private BigDecimal remainQuote;
 
-    private Boolean isDeleted;
+    private Integer isDeleted;
 
     private LocalDateTime createdTime;
 

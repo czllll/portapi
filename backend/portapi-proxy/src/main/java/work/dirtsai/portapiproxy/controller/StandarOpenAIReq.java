@@ -33,12 +33,19 @@ public class StandarOpenAIReq {
     @PostMapping("/chat/completions")
     public ResponseEntity<String> proxyRequest(@RequestBody String requestBody, @RequestHeader Map<String, String> headers) {
         try {
+            // 解析请求体
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode rootBody = objectMapper.readTree(requestBody);
+            // 获取请求体中的model
+            String model = rootBody.path("model").asText();
+            // 获取apikey
+
+            String apikey = standardOpenAIRequestService.getApiKeyByModelName(model);
+
             // 构建headers
             Map<String, String> newHeaders = new HashMap<>();
-            // TODO 选择模型的令牌
-            List<Model> models = standardOpenAIRequestService.list();
 
-            newHeaders.put(HttpHeaders.AUTHORIZATION, "xx");
+            newHeaders.put(HttpHeaders.AUTHORIZATION, "Bearer " + apikey);
             newHeaders.put(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
             // 发送请求

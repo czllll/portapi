@@ -46,143 +46,129 @@ import { Pencil, Trash2 } from "lucide-react"
 import axios from "@/lib/axios-config"
 import { toast } from "react-hot-toast"
 
-interface ApiInfo {
-  id: number
-  name: string
-  url: string
-  method: string
-  description: string
-  status: number
-  headers: string
-  params: string
-  response: string
-  createTime: string
-  updateTime: string
+interface ModelInfo {
+  id: number;
+  modelId: number;
+  modelName: string;
+  modelCompany: string;
+  modelVersion: string;
+  realApiKey: string;
+  status: number;
+  remainQuote: number;
+  isDeleted: boolean;
+  createdTime: string; 
+  updatedTime: string; 
 }
 
-export default function ApisPage() {
+
+export default function ModelsPage() {
   const BASE_URL = process.env.NEXT_PUBLIC_BASE_API_URL
-  const [apis, setApis] = useState<ApiInfo[]>([])
+  const [models, setModels] = useState<ModelInfo[]>([])
   const [loading, setLoading] = useState(true)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
-  const [currentApi, setCurrentApi] = useState<ApiInfo | null>(null)
+  const [currentModel, setCurrentModel] = useState<ModelInfo | null>(null)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
-  const [deleteApi, setDeleteApi] = useState<ApiInfo | null>(null)
-  const [newApi, setNewApi] = useState<Partial<ApiInfo>>({
-    name: "",
-    url: "",
-    method: "GET",
-    description: "",
+  const [deleteModel, setDeleteModel] = useState<ModelInfo | null>(null)
+  const [newModel, setNewModel] = useState<Partial<ModelInfo>>({
+    modelName: "",
+    modelCompany: "",
+    modelVersion: "",
+    realApiKey: "",
     status: 1,
-    headers: "{}",
-    params: "{}",
-    response: "{}"
+    remainQuote: 0
   })
 
-  const fetchApis = async () => {
+  const fetchModels = async () => {
     try {
       setLoading(true)
-      const response = await axios.get(`${BASE_URL}/api-info/page`, {
+      const response = await axios.get(`${BASE_URL}/model/page`, {
         params: {
           current: 1,
           size: 10
         }
       });
-      const data = await response.data
-      
-      setApis(data.records)
-      console.log("apis---------", apis)
+      const data = await response.data;
+      setModels(data)
     } catch (error) {
-      console.error('Failed to fetch APIs:', error)
+      console.error('Failed to fetch models:', error)
+      toast.error("获取模型列表失败")
     } finally {
       setLoading(false)
     }
   }
 
   useEffect(() => {
-    fetchApis()
+    fetchModels()
   }, [])
 
   const handleCreate = async () => {
     try {
-      const response = await axios.post(`${BASE_URL}/api-info`, newApi, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await axios.post(`${BASE_URL}/model`, newModel);
       if (response.data === true) {
-        toast.success("API创建成功")
-        fetchApis()
-        setNewApi({
-          name: "",
-          url: "",
-          method: "GET",
-          description: "",
+        toast.success("模型创建成功")
+        fetchModels()
+        setNewModel({
+          modelName: "",
+          modelCompany: "",
+          modelVersion: "",
+          realApiKey: "",
           status: 1,
-          headers: "{}",
-          params: "{}",
-          response: "{}"
+          remainQuote: 0
         })
         setIsCreateOpen(false)
       }
     } catch (error) {
-      console.error('Failed to create API:', error)
-      toast("API创建失败", { icon: "error" })
+      console.error('Failed to create model:', error)
+      toast.error("模型创建失败")
     }
   }
 
   const handleEdit = async () => {
-    if (!currentApi) return
+    if (!currentModel) return
     try {
-      const response = await axios.put(`${BASE_URL}/api-info`, currentApi, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await axios.put(`${BASE_URL}/model`, currentModel);
       if (response.data === true) {
-        toast.success("API更新成功")
-        fetchApis()
+        toast.success("模型更新成功")
+        fetchModels()
         setIsEditOpen(false)
-        setCurrentApi(null)
+        setCurrentModel(null)
       }
     } catch (error) {
-      console.error('Failed to update API:', error)
-      toast("API更新失败", { icon: "error" })
-    }
-}
-
-  
-  const handleDelete = async () => {
-    if (!deleteApi?.id) return
-    
-    try {
-      const response = await axios.delete(`${BASE_URL}/api-info/${deleteApi.id}`);
-      if (response.data === true) {
-        toast.success("API删除成功")
-        fetchApis()
-        setIsDeleteOpen(false)
-        setDeleteApi(null)
-      }
-    } catch (error) {
-      console.error('Failed to delete API:', error)
-      toast("API删除失败", { icon: "error" })
+      console.error('Failed to update model:', error)
+      toast.error("模型更新失败")
     }
   }
-  
+
+  const handleDelete = async () => {
+    if (!deleteModel?.id) return
+    try {
+      const response = await axios.put(`${BASE_URL}/model/${deleteModel.id}/delete`);
+      if (response.data === true) {
+        toast.success("模型删除成功")
+        fetchModels()
+        setIsDeleteOpen(false)
+        setDeleteModel(null)
+      }
+    } catch (error) {
+      console.error('Failed to delete model:', error)
+      toast.error("模型删除失败")
+    }
+  }
+
   const handleStatusChange = async (id: number, checked: boolean) => {
     try {
-      const api = apis.find(api => api.id === id)
-      if (!api) return
+      const modelItem = models.find(m => m.id === id)
+      if (!modelItem) return
 
-      setApis(prevApis => 
-        prevApis.map(a => 
-          a.id === id ? { ...a, status: checked ? 1 : 0 } : a
+      setModels(prevModels => 
+        prevModels.map(m => 
+          m.id === id ? { ...m, status: checked ? 1 : 0 } : m
         )
       )
-  
-      const response = await axios.put(`${BASE_URL}/api-info`, {
-        ...api,
+
+      const response = await axios.put(`${BASE_URL}/model`, {
+        ...modelItem,
         status: checked ? 1 : 0
       });
       
@@ -190,67 +176,64 @@ export default function ApisPage() {
         toast.success("状态更新成功")
       }
     } catch (error) {
-      setApis(prevApis => 
-        prevApis.map(a => 
-          a.id === id ? { ...a, status: !checked ? 1 : 0 } : a
+      setModels(prevModels => 
+        prevModels.map(m => 
+          m.id === id ? { ...m, status: !checked ? 1 : 0 } : m
         )
       )
       console.error('Failed to update status:', error)
-      toast("状态更新失败", { icon: "error" })
+      toast.error("状态更新失败")
     }
-}
-
+  }
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-      {/* 创建API按钮 */}
+      {/* 创建Model按钮 */}
       <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">APIs</h2>
+        <h2 className="text-3xl font-bold tracking-tight">Models</h2>
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
-            <Button>Create API</Button>
+            <Button>Create Model</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Create New API</DialogTitle>
+              <DialogTitle>Create New Model</DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <label>Name</label>
+                <label>Model Name</label>
                 <Input
-                  value={newApi.name}
-                  onChange={(e) => setNewApi({ ...newApi, name: e.target.value })}
+                  value={newModel.modelName}
+                  onChange={(e) => setNewModel({ ...newModel, modelName: e.target.value })}
                 />
               </div>
               <div className="grid gap-2">
-                <label>URL</label>
+                <label>Model Company</label>
                 <Input
-                  value={newApi.url}
-                  onChange={(e) => setNewApi({ ...newApi, url: e.target.value })}
+                  value={newModel.modelCompany}
+                  onChange={(e) => setNewModel({ ...newModel, modelCompany: e.target.value })}
                 />
               </div>
               <div className="grid gap-2">
-                <label>Method</label>
-                <Select
-                  value={newApi.method}
-                  onValueChange={(value) => setNewApi({ ...newApi, method: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="GET">GET</SelectItem>
-                    <SelectItem value="POST">POST</SelectItem>
-                    <SelectItem value="PUT">PUT</SelectItem>
-                    <SelectItem value="DELETE">DELETE</SelectItem>
-                  </SelectContent>
-                </Select>
+                <label>Model Version</label>
+                <Input
+                  value={newModel.modelVersion}
+                  onChange={(e) => setNewModel({ ...newModel, modelVersion: e.target.value })}
+                />
               </div>
               <div className="grid gap-2">
-                <label>Description</label>
+                <label>API Key</label>
                 <Input
-                  value={newApi.description}
-                  onChange={(e) => setNewApi({ ...newApi, description: e.target.value })}
+                  value={newModel.realApiKey}
+                  onChange={(e) => setNewModel({ ...newModel, realApiKey: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <label>Remain Quote</label>
+                <Input
+                  type="number"
+                  value={newModel.remainQuote}
+                  onChange={(e) => setNewModel({ ...newModel, remainQuote: Number(e.target.value) })}
                 />
               </div>
             </div>
@@ -264,10 +247,10 @@ export default function ApisPage() {
         </Dialog>
       </div>
 
-      {/* API列表 */}
+      {/* Model列表 */}
       <Card>
         <CardHeader>
-          <CardTitle>API List</CardTitle>
+          <CardTitle>Model List</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -278,34 +261,34 @@ export default function ApisPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableCell>Name</TableCell>
-                  <TableCell>URL</TableCell>
-                  <TableCell>Method</TableCell>
+                  <TableCell>Model Name</TableCell>
+                  <TableCell>Model Company</TableCell>
+                  <TableCell>ApiKey</TableCell>
                   <TableCell>Status</TableCell>
-                  <TableCell>Description</TableCell>
+                  <TableCell>remainQuote</TableCell>
                   <TableCell className="w-[140px]">Actions</TableCell>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {apis.map((api) => (
-                  <TableRow key={api.id}>
-                    <TableCell>{api.name}</TableCell>
-                    <TableCell>{api.url}</TableCell>
-                    <TableCell>{api.method}</TableCell>
+                {models.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell>{item.modelName}</TableCell>
+                    <TableCell>{item.modelCompany}</TableCell>
+                    <TableCell>{item.realApiKey}</TableCell>
                     <TableCell>
                       <Switch
-                        checked={api.status === 1}
-                        onCheckedChange={(checked) => handleStatusChange(api.id, checked)}
+                        checked={item.status === 1}
+                        onCheckedChange={(checked) => handleStatusChange(item.id, checked)}
                       />
                     </TableCell>
-                    <TableCell>{api.description}</TableCell>
+                    <TableCell>{item.remainQuote}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => {
-                            setCurrentApi(api)
+                            setCurrentModel(item)
                             setIsEditOpen(true)
                           }}
                         >
@@ -316,7 +299,7 @@ export default function ApisPage() {
                           size="sm"
                           className="text-red-500 hover:text-red-500"
                           onClick={() => {
-                            setDeleteApi(api)
+                            setDeleteModel(item)
                             setIsDeleteOpen(true)
                           }}
                         >
@@ -328,61 +311,60 @@ export default function ApisPage() {
                 ))}
               </TableBody>
             </Table>
-            
           )}
         </CardContent>
       </Card>
 
-      {/* 编辑API对话框 */}
+      {/* 编辑Model对话框 */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit API</DialogTitle>
+            <DialogTitle>Edit Model</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <label>Name</label>
+              <label>Model Name</label>
               <Input
-                value={currentApi?.name}
+                value={currentModel?.modelName}
                 onChange={(e) => 
-                  setCurrentApi(currentApi ? { ...currentApi, name: e.target.value } : null)
+                  setCurrentModel(currentModel ? { ...currentModel, modelName: e.target.value } : null)
                 }
               />
             </div>
             <div className="grid gap-2">
-              <label>URL</label>
+              <label>Model Company</label>
               <Input
-                value={currentApi?.url}
+                value={currentModel?.modelCompany}
                 onChange={(e) => 
-                  setCurrentApi(currentApi ? { ...currentApi, url: e.target.value } : null)
+                  setCurrentModel(currentModel ? { ...currentModel, modelCompany: e.target.value } : null)
                 }
               />
             </div>
             <div className="grid gap-2">
-              <label>Method</label>
-              <Select
-                value={currentApi?.method}
-                onValueChange={(value) =>
-                  setCurrentApi(currentApi ? { ...currentApi, method: value } : null)
+              <label>Model Version</label>
+              <Input
+                value={currentModel?.modelVersion}
+                onChange={(e) => 
+                  setCurrentModel(currentModel ? { ...currentModel, modelVersion: e.target.value } : null)
                 }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="GET">GET</SelectItem>
-                  <SelectItem value="POST">POST</SelectItem>
-                  <SelectItem value="PUT">PUT</SelectItem>
-                  <SelectItem value="DELETE">DELETE</SelectItem>
-                </SelectContent>
-              </Select>
+              />
             </div>
             <div className="grid gap-2">
-              <label>Description</label>
+              <label>API Key</label>
               <Input
-                value={currentApi?.description}
-                onChange={(e) =>
-                  setCurrentApi(currentApi ? { ...currentApi, description: e.target.value } : null)
+                value={currentModel?.realApiKey}
+                onChange={(e) => 
+                  setCurrentModel(currentModel ? { ...currentModel, realApiKey: e.target.value } : null)
+                }
+              />
+            </div>
+            <div className="grid gap-2">
+              <label>Remain Quote</label>
+              <Input
+                type="number"
+                value={currentModel?.remainQuote}
+                onChange={(e) => 
+                  setCurrentModel(currentModel ? { ...currentModel, remainQuote: Number(e.target.value) } : null)
                 }
               />
             </div>
@@ -396,16 +378,17 @@ export default function ApisPage() {
         </DialogContent>
       </Dialog>
 
+      {/* 删除确认对话框 */}
       <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>确认删除</AlertDialogTitle>
             <AlertDialogDescription>
-              确定要删除API &quot;{deleteApi?.name}&quot; 吗？此操作无法撤销。
+              确定要删除模型 &quot;{deleteModel?.modelName}&quot; 吗？此操作无法撤销。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setDeleteApi(null)}>取消</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => setDeleteModel(null)}>取消</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete}>删除</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

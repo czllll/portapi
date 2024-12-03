@@ -31,8 +31,17 @@ public class StandardOpenAIRequestService {
         }
 
     }
+
     public List<Model> list() {
         return adminClient.list();
+    }
+
+    /**
+     * 根据模型名称获取apikey
+     * @param modelName 模型名称
+     */
+    public String getApiKeyByModelName(String modelName) {
+        return adminClient.getApiKeyByModelName(modelName);
     }
 
 }
