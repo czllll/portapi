@@ -21,8 +21,13 @@ import work.dirtsai.portapiproxy.service.StandardOpenAIRequestService;
 import work.dirtsai.portapiproxy.utils.HttpUtils;
 
 import java.io.*;
+
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+
+
+
+
 
 @RestController
 @RequestMapping("/")
@@ -78,6 +83,7 @@ public class StandarOpenAIReq {
             }
 
             servletResponse.setContentType(response.header("Content-Type"));
+            servletResponse.setCharacterEncoding("UTF-8");
             servletResponse.getWriter().write(responseBody);
 
         } else {

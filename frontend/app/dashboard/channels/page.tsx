@@ -45,6 +45,7 @@ import { Switch } from "@/components/ui/switch"
 import { Pencil, Trash2 } from "lucide-react"
 import axios from "@/lib/axios-config"
 import { toast } from "react-hot-toast"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface ModelInfo {
   id: number;
@@ -261,20 +262,39 @@ export default function ModelsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableCell>Model Name</TableCell>
-                  <TableCell>Model Company</TableCell>
-                  <TableCell>ApiKey</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>remainQuote</TableCell>
-                  <TableCell className="w-[140px]">Actions</TableCell>
+                  <TableCell className="text-center font-bold">Model Name</TableCell>
+                  <TableCell className="text-center font-bold">Model Company</TableCell>
+                  <TableCell className="text-center font-bold">ApiKey</TableCell>
+                  <TableCell className="text-center font-bold">Status</TableCell>
+                  <TableCell className="text-center font-bold">remainQuote</TableCell>
+                  <TableCell className="w-[140px] text-center font-bold">Actions</TableCell>
                 </TableRow>
               </TableHeader>
-              <TableBody>
+
+              <TableBody className="[&>*]:text-center">
                 {models.map((item) => (
                   <TableRow key={item.id}>
                     <TableCell>{item.modelName}</TableCell>
                     <TableCell>{item.modelCompany}</TableCell>
-                    <TableCell>{item.realApiKey}</TableCell>
+                    <TableCell>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            onClick={() => {
+                              navigator.clipboard.writeText(item.realApiKey);
+                              toast.success("API Key copied to clipboard");
+                            }}
+                          >
+                            Copy to Clipboard
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent className="bg-white text-black p-2 border border-gray-300 rounded shadow-lg">
+                          <p>{item.realApiKey}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    </TableCell>
                     <TableCell>
                       <Switch
                         checked={item.status === 1}
