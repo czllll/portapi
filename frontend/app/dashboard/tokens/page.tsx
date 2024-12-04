@@ -52,6 +52,7 @@ import { cn } from "@/lib/utils"
 import { Calendar } from "@/components/ui/calendar"
 import { format, set } from "date-fns"
 import useUserStore from "@/stores/useUserStore"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 
 const MODEL_RESTRICTION_OPTIONS: Option[] = [
@@ -351,7 +352,7 @@ export default function TokensPage() {
           ) : (
             <Table>
               <TableHeader>
-                <TableRow>
+                <TableRow className="text-center font-bold">
                   <TableCell>Token Number</TableCell>
                   <TableCell>Name</TableCell>
                   <TableCell>Quota</TableCell>
@@ -361,10 +362,28 @@ export default function TokensPage() {
                   <TableCell className="w-[140px]">Actions</TableCell>
                 </TableRow>
               </TableHeader>
-              <TableBody>
+              <TableBody className="text-center">
                 {tokens.map((token) => (
                   <TableRow key={token.id}>
-                    <TableCell>{token.tokenNumber}</TableCell>
+                    <TableCell>
+                    <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              onClick={() => {
+                                navigator.clipboard.writeText(token.tokenNumber);
+                                toast.success("API Key copied to clipboard");
+                              }}
+                            >
+                              Copy to Clipboard
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent className="bg-white text-black p-2 border border-gray-300 rounded shadow-lg">
+                            <p>{token.tokenNumber}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </TableCell>
                     <TableCell>{token.name}</TableCell>
                     <TableCell>{token.usedQuota}/{token.totalQuota}</TableCell>
                     <TableCell>{token.modelRestriction}</TableCell>

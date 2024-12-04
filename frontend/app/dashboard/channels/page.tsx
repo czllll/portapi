@@ -277,23 +277,23 @@ export default function ModelsPage() {
                     <TableCell>{item.modelName}</TableCell>
                     <TableCell>{item.modelCompany}</TableCell>
                     <TableCell>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            onClick={() => {
-                              navigator.clipboard.writeText(item.realApiKey);
-                              toast.success("API Key copied to clipboard");
-                            }}
-                          >
-                            Copy to Clipboard
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent className="bg-white text-black p-2 border border-gray-300 rounded shadow-lg">
-                          <p>{item.realApiKey}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              onClick={() => {
+                                navigator.clipboard.writeText(item.realApiKey);
+                                toast.success("API Key copied to clipboard");
+                              }}
+                            >
+                              Copy to Clipboard
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent className="bg-white text-black p-2 border border-gray-300 rounded shadow-lg">
+                            <p>{item.realApiKey}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </TableCell>
                     <TableCell>
                       <Switch
