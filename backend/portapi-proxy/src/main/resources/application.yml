@@ -27,3 +27,5 @@ feign:
     config:
       default:
         loggerLevel: FULL
+        connectTimeout: 60000
+        readTimeout: 60000

@@ -61,4 +61,17 @@ create table models (
                         created_time timestamp not null default current_timestamp,
                         updated_time timestamp not null default current_timestamp
 
-)
+);
+
+
+use portapi_db;
+CREATE TABLE `api_calls` (
+                             `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+                             `token_number` VARCHAR(64) NOT NULL COMMENT '用户ID',
+                             `call_model` VARCHAR(50) NOT NULL COMMENT '调用的模型名称',
+                             `used_token` INT UNSIGNED NOT NULL COMMENT '使用的token数量',
+                             `create_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '调用时间',
+                             `status` TINYINT NOT NULL COMMENT '请求状态：1成功，0失败',
+                             `response_time` INT UNSIGNED COMMENT '响应时间(ms)',
+                             PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='API调用记录表';

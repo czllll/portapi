@@ -36,15 +36,23 @@ public class GatewayAuthFilter implements Filter {
             throws IOException, ServletException {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
-
+        long startTime = System.currentTimeMillis();
+        String requestId = httpRequest.getHeader("X-Gateway-Request-Id");
         //验证签名
 //        if (!verifyInternalAuth(httpRequest)) {
 //            httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 //            return;
 //        }
 
-        chain.doFilter(request, response);
+        try {
+            chain.doFilter(request, response);
+        } finally {
+            long duration = System.currentTimeMillis() - startTime;
+            log.info("Request completed: {} - Duration: {}ms", requestId, duration);
+        }
     }
+
+
 
     /**
      * 验证签名

@@ -1,10 +1,8 @@
 package work.dirtsai.portapiproxy.feign;
 
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
+import work.dirtsai.common.common.ApiCallDTO;
 import work.dirtsai.common.common.BaseResponse;
 import work.dirtsai.portapiproxy.config.FeignConfig;
 import work.dirtsai.portapiproxy.entity.Model;
@@ -25,4 +23,11 @@ public interface AdminClient {
      */
     @GetMapping("/api/model/apikey")
     String getApiKeyByModelName(@RequestParam String modelName);
+
+    /**
+     * 新增调用信息
+     */
+    @PostMapping("/api/api-call/create")
+    BaseResponse<Boolean> saveApiCall(@RequestBody ApiCallDTO apiCallDTO);
+
 }

@@ -2,6 +2,7 @@ package work.dirtsai.portapiproxy.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.annotation.Resource;
 import jakarta.servlet.AsyncContext;
 import jakarta.servlet.ServletOutputStream;
@@ -17,15 +18,14 @@ import org.springframework.boot.web.servlet.ServletComponentScan;
 import org.springframework.http.*;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import work.dirtsai.common.common.ApiCallDTO;
 import work.dirtsai.portapiproxy.service.StandardOpenAIRequestService;
 import work.dirtsai.portapiproxy.utils.HttpUtils;
-
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.io.*;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
-
-
 
 
 
@@ -44,20 +44,38 @@ public class StandarOpenAIReq {
     @Resource
     private StandardOpenAIRequestService standardOpenAIRequestService;
 
+    @Resource
+    private OkHttpClient client;
+
     @PostMapping("/chat/completions")
     public void proxyRequest(@org.springframework.web.bind.annotation.RequestBody String requestBody,
                              @RequestHeader Map<String, String> headers,
                              HttpServletRequest servletRequest,
                              HttpServletResponse servletResponse) throws Exception {
 
+        long startTime = System.currentTimeMillis();
+        String tokenNumber = headers.get("authorization").substring(7);
+
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode rootBody = objectMapper.readTree(requestBody);
 
         boolean isStream = rootBody.path("stream").asBoolean();
         String model = rootBody.path("model").asText();
+
+        if (isStream) {
+            ObjectNode modifiedBody = (ObjectNode) rootBody;
+            ObjectNode streamOptions = objectMapper.createObjectNode();
+            streamOptions.put("include_usage", true);
+            modifiedBody.set("stream_options", streamOptions);
+            requestBody = modifiedBody.toString();
+        }
+
         String apikey = standardOpenAIRequestService.getApiKeyByModelName(model);
 
-        OkHttpClient client = new OkHttpClient();
+        log.info("OkHttp Configuration - Read Timeout: {}s, Connect Timeout: {}s, Write Timeout: {}s",
+                client.readTimeoutMillis() / 1000,
+                client.connectTimeoutMillis() / 1000,
+                client.writeTimeoutMillis() / 1000);
 
         Request request = new Request.Builder()
                 .url(openaiApiUrl + "/chat/completions")
@@ -65,69 +83,112 @@ public class StandarOpenAIReq {
                 .addHeader(HttpHeaders.AUTHORIZATION, "Bearer " + apikey)
                 .build();
 
-        if (!isStream) {
-            Response response = client.newCall(request).execute();
-            String responseBody = response.body().string();
+        try {
+            if (!isStream) {
+                // 非流式响应处理
+                Response response = client.newCall(request).execute();
+                String responseBody = response.body().string();
 
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode rootNode = mapper.readTree(responseBody);
-            Integer totalTokens = rootNode.path("usage").path("total_tokens").asInt();
+                ObjectMapper mapper = new ObjectMapper();
+                JsonNode rootNode = mapper.readTree(responseBody);
+                Integer totalTokens = rootNode.path("usage").path("total_tokens").asInt();
 
-            boolean updateQuota = standardOpenAIRequestService.updateTokenQuota(
-                    headers.get("authorization").substring(7),
-                    totalTokens
-            );
+                boolean updateQuota = standardOpenAIRequestService.updateTokenQuota(tokenNumber, totalTokens);
+                if (!updateQuota) {
+                    throw new RuntimeException("Update token quota failed");
+                }
 
-            if (!updateQuota) {
-                throw new RuntimeException("Update token quota failed");
-            }
+                // 保存调用信息
+                saveApiCall(model, tokenNumber, totalTokens, 1, startTime);
 
-            servletResponse.setContentType(response.header("Content-Type"));
-            servletResponse.setCharacterEncoding("UTF-8");
-            servletResponse.getWriter().write(responseBody);
+                servletResponse.setContentType(response.header("Content-Type"));
+                servletResponse.setCharacterEncoding("UTF-8");
+                servletResponse.getWriter().write(responseBody);
 
-        } else {
-            AsyncContext asyncContext = servletRequest.startAsync();
-            asyncContext.setTimeout(60000);
+            } else{
+                AsyncContext asyncContext = servletRequest.startAsync();
+                asyncContext.setTimeout(360000);
 
-            servletResponse.setContentType("text/event-stream");
-            servletResponse.setCharacterEncoding("UTF-8");
+                servletResponse.setContentType("text/event-stream");
+                servletResponse.setCharacterEncoding("UTF-8");
 
-            ServletOutputStream output = servletResponse.getOutputStream();
+                ServletOutputStream output = servletResponse.getOutputStream();
+                AtomicBoolean usageProcessed = new AtomicBoolean(false);  // 使用原子类型
 
-            client.newCall(request).enqueue(new Callback() {
-                @Override
-                public void onResponse(Call call, Response response) {
-                    try (ResponseBody responseBody = response.body()) {
-                        BufferedReader reader = new BufferedReader(
-                                new InputStreamReader(responseBody.byteStream())
-                        );
+                client.newCall(request).enqueue(new Callback() {
+                    @Override
+                    public void onResponse(Call call, Response response) {
+                        try (ResponseBody responseBody = response.body()) {
+                            BufferedReader reader = new BufferedReader(
+                                    new InputStreamReader(responseBody.byteStream())
+                            );
 
-                        String line;
-                        while ((line = reader.readLine()) != null) {
-                            output.write((line + "\n").getBytes(StandardCharsets.UTF_8));
-                            if (line.isEmpty()) {
-                                output.flush();
+                            String line;
+                            while ((line = reader.readLine()) != null) {
+                                output.write((line + "\n").getBytes(StandardCharsets.UTF_8));
+                                if (line.isEmpty()) {
+                                    output.flush();
+                                }
+                                if (!usageProcessed.get() && line.startsWith("data: ")) {  // 使用 get()
+                                    String chunk = line.substring(6);
+                                    try {
+                                        if (!chunk.equals("[DONE]")) {
+                                            JsonNode chunkNode = objectMapper.readTree(chunk);
+                                            if (chunkNode.has("usage") && !chunkNode.get("usage").isNull()) {
+                                                JsonNode usage = chunkNode.get("usage");
+                                                Integer totalTokens = usage.get("total_tokens").asInt();
+                                                boolean updateQuota = standardOpenAIRequestService.updateTokenQuota(tokenNumber, totalTokens);
+                                                saveApiCall(model, tokenNumber, totalTokens, updateQuota ? 1 : 0, startTime);
+                                                log.info("Token quota updated successfully, totalTokens: {}", totalTokens);
+                                                usageProcessed.set(true);  // 使用 set()
+                                            }
+                                        }
+                                    } catch (Exception e) {
+                                        log.error("Error processing chunk: {}", chunk, e);
+                                    }
+                                }
                             }
+                        } catch (Exception e) {
+                            log.error("Error processing stream", e);
+                            if (!usageProcessed.get()) {  // 使用 get()
+                                saveApiCall(model, tokenNumber, 0, 0, startTime);
+                            }
+                        } finally {
+                            try {
+                                output.close();
+                            } catch (IOException e) {
+                                log.error("Error closing output stream", e);
+                            }
+                            asyncContext.complete();
                         }
-                    } catch (Exception e) {
-                        log.error("Error processing stream", e);
-                    } finally {
-                        try {
-                            output.close();
-                        } catch (IOException e) {
-                            log.error("Error closing output stream", e);
-                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call call, IOException e) {
+                        log.error("Stream response error", e);
+                        saveApiCall(model, tokenNumber, 0, 0, startTime);
                         asyncContext.complete();
                     }
-                }
+                });
+            }
+        } catch (Exception e) {
+            log.error("Error in proxy request", e);
+            saveApiCall(model, tokenNumber, 0, 0, startTime);
+            throw e;
+        }
+    }
 
-                @Override
-                public void onFailure(Call call, IOException e) {
-                    log.error("Stream response error", e);
-                    asyncContext.complete();
-                }
-            });
+    private void saveApiCall(String model, String tokenNumber, Integer usedTokens, Integer status, long startTime) {
+        try {
+            ApiCallDTO apiCallDTO = new ApiCallDTO();
+            apiCallDTO.setCallModel(model);
+            apiCallDTO.setTokenNumber(tokenNumber);
+            apiCallDTO.setUsedToken(usedTokens);
+            apiCallDTO.setStatus(status);
+            apiCallDTO.setResponseTime((int) (System.currentTimeMillis() - startTime));
+            standardOpenAIRequestService.saveApiCall(apiCallDTO);
+        } catch (Exception e) {
+            log.error("Error saving api call", e);
         }
     }
 }

@@ -2,6 +2,7 @@ package work.dirtsai.portapiproxy.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import work.dirtsai.common.common.ApiCallDTO;
 import work.dirtsai.common.common.BaseResponse;
 import work.dirtsai.portapiproxy.entity.Model;
 import work.dirtsai.common.common.UpdateQuotaRequest;
@@ -44,4 +45,12 @@ public class StandardOpenAIRequestService {
         return adminClient.getApiKeyByModelName(modelName);
     }
 
+    /**
+     * 新增调用信息
+     * @param apiCallDTO 调用信息
+     */
+    public boolean saveApiCall(ApiCallDTO apiCallDTO) {
+        return adminClient.saveApiCall(apiCallDTO).getData();
+
+    }
 }
