@@ -31,11 +31,6 @@ import axios from "@/lib/axios-config";
     tokenUsage: number;
   }
 
-  interface ApiResponse<T> {
-    code: number;
-    data: T;
-    message: string;
-  }
 export default function AnalyticsPage() {
 
 

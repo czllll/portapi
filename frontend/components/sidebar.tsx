@@ -8,7 +8,8 @@ import {
   CloudIcon,
   Users,
   KeySquare,
-  Component
+  Component,
+  Wallet
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -20,12 +21,7 @@ interface SidebarProps {
 }
 
 const menuItems = [
-  {
-    title: "APIs",
-    icon: CodeIcon,
-    href: "/dashboard/apis",
-    role: ["admin", "user"]
-  },
+
   {
     title: "Analytics", 
     icon: BarChartIcon,
@@ -51,6 +47,12 @@ const menuItems = [
     icon: Component,
     href: "/dashboard/channels",
     role: ["admin"]
+  },
+  {
+    title: "Wallet",
+    icon: Wallet,
+    href: "/dashboard/wallet",
+    role: ["admin", "user"]
   },
   {
     title: "Settings",
