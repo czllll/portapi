@@ -56,7 +56,7 @@ export const useAuth = () => {
         try {
             await authService.login(formData)
             await fetchCurrentUser()
-            router.push('/dashboard')
+            router.push('/dashboard/analytics')
             return true
         } catch (error) {
             if (error instanceof Error) {

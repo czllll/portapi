@@ -26,4 +26,13 @@ public interface ModelService extends IService<Model> {
      * @return
      */
     List<Model> getModelList(Integer current, Integer size);
+
+
+    /**
+     * 测试模型
+     *
+     * @param model
+     * @return
+     */
+    boolean testModel(Model model);
 }

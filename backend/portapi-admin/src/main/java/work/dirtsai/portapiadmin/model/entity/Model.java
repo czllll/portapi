@@ -1,5 +1,6 @@
 package work.dirtsai.portapiadmin.model.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -10,16 +11,12 @@ import java.time.LocalDateTime;
 @TableName("model")
 public class Model {
 
-    @TableId
+    @TableId(type = IdType.AUTO)
     private Integer id;
-
-    private Integer modelId;
 
     private String modelName;
 
     private String modelCompany;
-
-    private String modelVersion;
 
     private String realApiKey;
 

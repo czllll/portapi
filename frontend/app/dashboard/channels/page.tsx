@@ -33,159 +33,192 @@ import {
 } from "@/components/ui/alert-dialog" 
 
 import { Input } from "@/components/ui/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { useEffect, useState } from "react"
 import { Switch } from "@/components/ui/switch"
-import { Pencil, Trash2 } from "lucide-react"
+import { Pencil, Trash2, Zap } from "lucide-react"
 import axios from "@/lib/axios-config"
 import { toast } from "react-hot-toast"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+
+interface ModelTemplate {
+  id: number;
+  company: string;
+  modelName: string;
+}
 
 interface ModelInfo {
   id: number;
-  modelId: number;
   modelName: string;
   modelCompany: string;
-  modelVersion: string;
   realApiKey: string;
   status: number;
   remainQuote: number;
-  isDeleted: boolean;
-  createdTime: string; 
-  updatedTime: string; 
 }
 
 
 export default function ModelsPage() {
-  const BASE_URL = process.env.NEXT_PUBLIC_BASE_API_URL
-  const [models, setModels] = useState<ModelInfo[]>([])
-  const [loading, setLoading] = useState(true)
-  const [isCreateOpen, setIsCreateOpen] = useState(false)
-  const [isEditOpen, setIsEditOpen] = useState(false)
-  const [currentModel, setCurrentModel] = useState<ModelInfo | null>(null)
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false)
-  const [deleteModel, setDeleteModel] = useState<ModelInfo | null>(null)
+  const BASE_URL = process.env.NEXT_PUBLIC_BASE_API_URL;
+  const [models, setModels] = useState<ModelInfo[]>([]);
+  const [templates, setTemplates] = useState<ModelTemplate[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<ModelTemplate | null>(null);
+  const [currentModel, setCurrentModel] = useState<ModelInfo | null>(null);
+  const [deleteModel, setDeleteModel] = useState<ModelInfo | null>(null);
   const [newModel, setNewModel] = useState<Partial<ModelInfo>>({
     modelName: "",
     modelCompany: "",
-    modelVersion: "",
     realApiKey: "",
     status: 1,
     remainQuote: 0
-  })
+  });
+
+  const fetchTemplates = async () => {
+    try {
+      const response = await axios.get(`${BASE_URL}/model-template/list`);
+      setTemplates(response.data);
+    } catch (error) {
+      console.error('Failed to fetch templates:', error);
+      toast.error("获取模型模板失败");
+    }
+  };
 
   const fetchModels = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       const response = await axios.get(`${BASE_URL}/model/page`, {
         params: {
           current: 1,
           size: 10
         }
       });
-      const data = await response.data;
-      setModels(data)
+      setModels(response.data);
     } catch (error) {
-      console.error('Failed to fetch models:', error)
-      toast.error("获取模型列表失败")
+      console.error('Failed to fetch models:', error);
+      toast.error("获取模型列表失败");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchModels()
-  }, [])
+    fetchTemplates();
+    fetchModels();
+  }, []);
+
+  // 当选择模板时更新新模型信息
+  const handleTemplateChange = (templateId: string) => {
+    const template = templates.find(t => t.id.toString() === templateId);
+    if (template) {
+      setSelectedTemplate(template);
+      setNewModel({
+        ...newModel,
+        modelCompany: template.company,
+        modelName: template.modelName
+      });
+    }
+  };
 
   const handleCreate = async () => {
     try {
       const response = await axios.post(`${BASE_URL}/model`, newModel);
       if (response.data === true) {
-        toast.success("模型创建成功")
-        fetchModels()
+        toast.success("模型创建成功");
+        fetchModels();
         setNewModel({
           modelName: "",
           modelCompany: "",
-          modelVersion: "",
           realApiKey: "",
           status: 1,
           remainQuote: 0
-        })
-        setIsCreateOpen(false)
+        });
+        setSelectedTemplate(null);
+        setIsCreateOpen(false);
       }
     } catch (error) {
-      console.error('Failed to create model:', error)
-      toast.error("模型创建失败")
+      console.error('Failed to create model:', error);
+      toast.error("模型创建失败");
     }
-  }
+  };
 
   const handleEdit = async () => {
-    if (!currentModel) return
+    if (!currentModel) return;
     try {
       const response = await axios.put(`${BASE_URL}/model`, currentModel);
       if (response.data === true) {
-        toast.success("模型更新成功")
-        fetchModels()
-        setIsEditOpen(false)
-        setCurrentModel(null)
+        toast.success("模型更新成功");
+        fetchModels();
+        setIsEditOpen(false);
+        setCurrentModel(null);
       }
     } catch (error) {
-      console.error('Failed to update model:', error)
-      toast.error("模型更新失败")
+      console.error('Failed to update model:', error);
+      toast.error("模型更新失败");
     }
-  }
-
+  };
+  
   const handleDelete = async () => {
-    if (!deleteModel?.id) return
+    if (!deleteModel?.id) return;
     try {
       const response = await axios.put(`${BASE_URL}/model/${deleteModel.id}/delete`);
       if (response.data === true) {
-        toast.success("模型删除成功")
-        fetchModels()
-        setIsDeleteOpen(false)
-        setDeleteModel(null)
+        toast.success("模型删除成功");
+        fetchModels();
+        setIsDeleteOpen(false);
+        setDeleteModel(null);
       }
     } catch (error) {
-      console.error('Failed to delete model:', error)
-      toast.error("模型删除失败")
+      console.error('Failed to delete model:', error);
+      toast.error("模型删除失败");
     }
-  }
-
+  };
+  
   const handleStatusChange = async (id: number, checked: boolean) => {
     try {
-      const modelItem = models.find(m => m.id === id)
-      if (!modelItem) return
-
-      setModels(prevModels => 
-        prevModels.map(m => 
+      const modelItem = models.find(m => m.id === id);
+      if (!modelItem) return;
+  
+      // 立即更新UI状态
+      setModels(prevModels =>
+        prevModels.map(m =>
           m.id === id ? { ...m, status: checked ? 1 : 0 } : m
         )
-      )
-
+      );
+  
       const response = await axios.put(`${BASE_URL}/model`, {
         ...modelItem,
         status: checked ? 1 : 0
       });
-      
+  
       if (response.data === true) {
-        toast.success("状态更新成功")
+        toast.success("状态更新成功");
       }
     } catch (error) {
-      setModels(prevModels => 
-        prevModels.map(m => 
+      // 如果失败，恢复原来的状态
+      setModels(prevModels =>
+        prevModels.map(m =>
           m.id === id ? { ...m, status: !checked ? 1 : 0 } : m
         )
-      )
-      console.error('Failed to update status:', error)
-      toast.error("状态更新失败")
+      );
+      console.error('Failed to update status:', error);
+      toast.error("状态更新失败");
     }
-  }
+  };
+
+  const handleTest = async (model: ModelInfo) => {
+    console.log("test model: ", model);
+    try {
+      const response = await axios.post(`${BASE_URL}/model/test`, model); 
+      if (response.data.data === true) {
+        toast.success(model.modelName + " connect successful");
+      }
+    } catch (error) {
+      toast.error("connect failed: " + error);
+    }
+};
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
@@ -202,26 +235,27 @@ export default function ModelsPage() {
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <label>Model Name</label>
-                <Input
-                  value={newModel.modelName}
-                  onChange={(e) => setNewModel({ ...newModel, modelName: e.target.value })}
-                />
+                <label>Select Model Template</label>
+                <Select 
+                  onValueChange={handleTemplateChange}
+                  value={selectedTemplate?.id.toString()}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a model template" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {templates.map((template) => (
+                      <SelectItem 
+                        key={template.id} 
+                        value={template.id.toString()}
+                      >
+                        {template.company} - {template.modelName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-              <div className="grid gap-2">
-                <label>Model Company</label>
-                <Input
-                  value={newModel.modelCompany}
-                  onChange={(e) => setNewModel({ ...newModel, modelCompany: e.target.value })}
-                />
-              </div>
-              <div className="grid gap-2">
-                <label>Model Version</label>
-                <Input
-                  value={newModel.modelVersion}
-                  onChange={(e) => setNewModel({ ...newModel, modelVersion: e.target.value })}
-                />
-              </div>
+
               <div className="grid gap-2">
                 <label>API Key</label>
                 <Input
@@ -229,12 +263,16 @@ export default function ModelsPage() {
                   onChange={(e) => setNewModel({ ...newModel, realApiKey: e.target.value })}
                 />
               </div>
+
               <div className="grid gap-2">
                 <label>Remain Quote</label>
                 <Input
                   type="number"
                   value={newModel.remainQuote}
-                  onChange={(e) => setNewModel({ ...newModel, remainQuote: Number(e.target.value) })}
+                  onChange={(e) => setNewModel({ 
+                    ...newModel, 
+                    remainQuote: Number(e.target.value) 
+                  })}
                 />
               </div>
             </div>
@@ -266,7 +304,6 @@ export default function ModelsPage() {
                   <TableCell className="text-center font-bold">Model Company</TableCell>
                   <TableCell className="text-center font-bold">ApiKey</TableCell>
                   <TableCell className="text-center font-bold">Status</TableCell>
-                  <TableCell className="text-center font-bold">remainQuote</TableCell>
                   <TableCell className="w-[140px] text-center font-bold">Actions</TableCell>
                 </TableRow>
               </TableHeader>
@@ -285,6 +322,7 @@ export default function ModelsPage() {
                                 navigator.clipboard.writeText(item.realApiKey);
                                 toast.success("API Key copied to clipboard");
                               }}
+                              className="bg-gray-400 hover:bg-gray-500"
                             >
                               Copy to Clipboard
                             </Button>
@@ -301,30 +339,69 @@ export default function ModelsPage() {
                         onCheckedChange={(checked) => handleStatusChange(item.id, checked)}
                       />
                     </TableCell>
-                    <TableCell>{item.remainQuote}</TableCell>
+                    
                     <TableCell>
                       <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setCurrentModel(item)
-                            setIsEditOpen(true)
-                          }}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-red-500 hover:text-red-500"
-                          onClick={() => {
-                            setDeleteModel(item)
-                            setIsDeleteOpen(true)
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                handleTest(item);
+                              }}
+                            >
+                              <Zap className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent className="bg-white text-black p-2 border border-gray-300 rounded shadow-lg">
+                            <p>Test</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setCurrentModel(item)
+                                setIsEditOpen(true)
+                              }}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent className="bg-white text-black p-2 border border-gray-300 rounded shadow-lg">
+                            <p>Edit</p>
+                          </TooltipContent>
+                        </Tooltip>            
+                      </TooltipProvider>
+
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-red-500 hover:text-red-500"
+                                onClick={() => {
+                                  setDeleteModel(item)
+                                  setIsDeleteOpen(true)
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent className="bg-white text-black p-2 border border-gray-300 rounded shadow-lg">
+                              <p>Delete</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+
                       </div>
                     </TableCell>
                   </TableRow>
@@ -343,48 +420,60 @@ export default function ModelsPage() {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <label>Model Name</label>
-              <Input
-                value={currentModel?.modelName}
-                onChange={(e) => 
-                  setCurrentModel(currentModel ? { ...currentModel, modelName: e.target.value } : null)
-                }
-              />
+              <label>Select Model Template</label>
+              <Select 
+                value={templates.find(
+                  t => t.company === currentModel?.modelCompany && 
+                      t.modelName === currentModel?.modelName
+                )?.id.toString()}
+                onValueChange={(value) => {
+                  const template = templates.find(t => t.id.toString() === value);
+                  if (template && currentModel) {
+                    setCurrentModel({
+                      ...currentModel,
+                      modelCompany: template.company,
+                      modelName: template.modelName
+                    });
+                  }
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a model template" />
+                </SelectTrigger>
+                <SelectContent>
+                  {templates.map((template) => (
+                    <SelectItem 
+                      key={template.id} 
+                      value={template.id.toString()}
+                    >
+                      {template.company} - {template.modelName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <div className="grid gap-2">
-              <label>Model Company</label>
-              <Input
-                value={currentModel?.modelCompany}
-                onChange={(e) => 
-                  setCurrentModel(currentModel ? { ...currentModel, modelCompany: e.target.value } : null)
-                }
-              />
-            </div>
-            <div className="grid gap-2">
-              <label>Model Version</label>
-              <Input
-                value={currentModel?.modelVersion}
-                onChange={(e) => 
-                  setCurrentModel(currentModel ? { ...currentModel, modelVersion: e.target.value } : null)
-                }
-              />
-            </div>
+
             <div className="grid gap-2">
               <label>API Key</label>
               <Input
                 value={currentModel?.realApiKey}
-                onChange={(e) => 
-                  setCurrentModel(currentModel ? { ...currentModel, realApiKey: e.target.value } : null)
+                onChange={(e) =>
+                  setCurrentModel(currentModel ? 
+                    { ...currentModel, realApiKey: e.target.value } : null
+                  )
                 }
               />
             </div>
+
             <div className="grid gap-2">
               <label>Remain Quote</label>
               <Input
                 type="number"
                 value={currentModel?.remainQuote}
-                onChange={(e) => 
-                  setCurrentModel(currentModel ? { ...currentModel, remainQuote: Number(e.target.value) } : null)
+                onChange={(e) =>
+                  setCurrentModel(currentModel ? 
+                    { ...currentModel, remainQuote: Number(e.target.value) } : null
+                  )
                 }
               />
             </div>

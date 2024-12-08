@@ -1,5 +1,6 @@
 package work.dirtsai.portapiadmin.client;
 
+import jakarta.annotation.Resource;
 import okhttp3.*;
 import okhttp3.logging.HttpLoggingInterceptor;
 import org.springframework.stereotype.Component;
@@ -10,7 +11,8 @@ import java.util.concurrent.TimeUnit;
 
 @Component
 public class ApiClient {
-    private final OkHttpClient client;
+    @Resource
+    private OkHttpClient client;
     private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
 
     public ApiClient() {

@@ -1,12 +1,14 @@
 package work.dirtsai.portapiadmin.controller;
 
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
+import work.dirtsai.common.common.BaseResponse;
+import work.dirtsai.portapiadmin.common.ResultUtils;
 import work.dirtsai.portapiadmin.model.entity.Model;
 import work.dirtsai.portapiadmin.service.ModelService;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -15,6 +17,7 @@ public class ModelController {
 
     @Resource
     private ModelService modelService;
+
 
     /** 获取模型列表 */
     @GetMapping("/list")
@@ -64,5 +67,23 @@ public class ModelController {
         return modelService.deleteModelById(id);
     }
 
+    /**
+     * 新增模型
+     * @param model 模型
+     *
+     */
+    @PostMapping
+    public boolean save(@RequestBody Model model) {
+        return modelService.save(model);
+    }
 
+    /**
+     * 测试模型
+     * @param model 模型
+     */
+    @PostMapping("/test")
+    public BaseResponse<Boolean> test(@RequestBody Model model) {
+        boolean result = modelService.testModel(model);
+        return ResultUtils.success(result);
+    }
 }

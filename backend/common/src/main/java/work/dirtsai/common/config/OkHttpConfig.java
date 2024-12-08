@@ -1,4 +1,4 @@
-package work.dirtsai.portapiproxy.config;
+package work.dirtsai.common.config;
 
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.ConnectionPool;
