@@ -46,28 +46,13 @@ import axios from "@/lib/axios-config"
 import { toast } from "react-hot-toast"
 import { Switch } from "@/components/ui/switch"
 import React from 'react';
-import MultipleSelector, { Option } from '@/components/ui/multiple-selector';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { Calendar } from "@/components/ui/calendar"
-import { format, set } from "date-fns"
+import { format } from "date-fns"
 import useUserStore from "@/stores/useUserStore"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
-
-const MODEL_RESTRICTION_OPTIONS: Option[] = [
-  { label: 'nextjs', value: 'Nextjs' },
-  { label: 'Vite', value: 'vite', disable: true },
-  { label: 'Nuxt', value: 'nuxt', disable: true },
-  { label: 'Vue', value: 'vue, disable: true', disable: true },
-  { label: 'Remix', value: 'remix' },
-  { label: 'Svelte', value: 'svelte', disable: true },
-  { label: 'Angular', value: 'angular', disable: true },
-  { label: 'Ember', value: 'ember', disable: true },
-  { label: 'React', value: 'react' },
-  { label: 'Gatsby', value: 'gatsby', disable: true },
-  { label: 'Astro', value: 'astro', disable: true },
-];
 
 interface Token {
   id: number
@@ -96,7 +81,6 @@ export default function TokensPage() {
   const [deleteToken, setDeleteToken] = useState<Token | null>(null)
   const {user} = useUserStore();
   const [newToken, setNewToken] = useState<Partial<Token>>()
-  const [modelRestrictionOptions, setModelRestrictionOptions] = useState([]);
 
   const fetchTokens = async () => {
     if (!user) return;
@@ -128,7 +112,7 @@ export default function TokensPage() {
         userId: user.userId,
         groupId: 1,
       })
-      fetchModelRestrictions();
+      // fetchModelRestrictions();
     }
     
   }, [user]);
@@ -137,20 +121,23 @@ export default function TokensPage() {
   const handleCreate = async () => {
     try {
       const response = await axios.post(`${BASE_URL}/tokens/create`, newToken)
-      if (response.status === 200) {
+      if (response.data.code === 200) {
         toast.success("Token创建成功")
-        fetchTokens()
-        setNewToken({
-          name: "",
-          totalQuota: 1000,
-          expiresAt: new Date(new Date().setFullYear(new Date().getFullYear() + 100)),
-          modelRestriction: "gpt-3.5-turbo",
-          status: 1,
-          groupId: 2,
-          userId: user?.userId
-        })
-        setIsCreateOpen(false)
+
+      } else {
+        toast.error(response.data.message)
       }
+      fetchTokens()
+      setNewToken({
+        name: "",
+        totalQuota: 1000,
+        expiresAt: new Date(new Date().setFullYear(new Date().getFullYear() + 100)),
+        modelRestriction: "gpt-3.5-turbo",
+        status: 1,
+        groupId: 2,
+        userId: user?.userId
+      })
+      setIsCreateOpen(false)
     } catch (error) {
       console.error('Failed to create token:', error)
       toast.error("Token创建失败")
@@ -161,12 +148,15 @@ export default function TokensPage() {
     if (!currentToken) return
     try {
       const response = await axios.put(`${BASE_URL}/tokens/${currentToken.id}`, currentToken)
-      if (response.status === 200) {
+      
+      if (response.data.code === 200) {
         toast.success("Token更新成功")
-        fetchTokens()
-        setIsEditOpen(false)
-        setCurrentToken(null)
+      } else {
+        toast.error(response.data.message)
       }
+      fetchTokens()
+      setIsEditOpen(false)
+      setCurrentToken(null)
     } catch (error) {
       console.error('Failed to update token:', error)
       toast.error("Token更新失败")
@@ -221,24 +211,24 @@ export default function TokensPage() {
   }
 
   //获取model列表
-  const fetchModelRestrictions = async () => {
-    try {
-      const response = await axios.get(`${BASE_URL}/model/list`);
-      if (!(response.status === 200)) {
-        throw new Error('Network response was not ok');
-      }
-      const options = response.data.map((item: { modelName: any; modelId: any; isDeleted: any }) => ({
-        label: item.modelName, 
-        value: item.modelName,   
-        disable: item.isDeleted || false, 
-      }));
-      setModelRestrictionOptions(options);
-      return await response.data;
-    } catch (error) {
-      console.error('Error fetching model restrictions:', error);
-      setModelRestrictionOptions([]);
-    }
-  };
+  // const fetchModelRestrictions = async () => {
+  //   try {
+  //     const response = await axios.get(`${BASE_URL}/model/list`);
+  //     if (!(response.status === 200)) {
+  //       throw new Error('Network response was not ok');
+  //     }
+  //     const options = response.data.map((item: { modelName: any; modelId: any; isDeleted: any }) => ({
+  //       label: item.modelName, 
+  //       value: item.modelName,   
+  //       disable: item.isDeleted || false, 
+  //     }));
+  //     setModelRestrictionOptions(options);
+  //     return await response.data;
+  //   } catch (error) {
+  //     console.error('Error fetching model restrictions:', error);
+  //     setModelRestrictionOptions([]);
+  //   }
+  // };
 
 
   return (
@@ -270,7 +260,7 @@ export default function TokensPage() {
                   onChange={(e) => setNewToken({ ...newToken, totalQuota: parseInt(e.target.value) })}
                 />
               </div>
-              <div className="grid gap-2">
+              {/* <div className="grid gap-2">
                 <label>Model Restriction</label>
                 <MultipleSelector
                   defaultOptions={modelRestrictionOptions}
@@ -285,7 +275,7 @@ export default function TokensPage() {
                         option.map((item) => item.value).join(",") });
                   }}
                 />
-              </div>
+              </div> */}
               <div className="grid gap-2">
                 <label>Expired Time</label>
                 <Popover>
@@ -356,71 +346,82 @@ export default function TokensPage() {
                   <TableCell>Token Number</TableCell>
                   <TableCell>Name</TableCell>
                   <TableCell>Quota</TableCell>
-                  <TableCell>Model Restriction</TableCell>
+                  {/* <TableCell>Model Restriction</TableCell> */}
                   <TableCell>Status</TableCell>
                   <TableCell>Expires At</TableCell>
                   <TableCell className="w-[140px]">Actions</TableCell>
                 </TableRow>
               </TableHeader>
               <TableBody className="text-center">
-                {tokens.map((token) => (
-                  <TableRow key={token.id}>
-                    <TableCell>
+              {tokens.map((token) => (
+                <TableRow key={token.id}>
+                  <TableCell>
                     <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              onClick={() => {
-                                navigator.clipboard.writeText(token.tokenNumber);
-                                toast.success("API Key copied to clipboard");
-                              }}
-                            >
-                              Copy to Clipboard
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent className="bg-white text-black p-2 border border-gray-300 rounded shadow-lg">
-                            <p>{token.tokenNumber}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </TableCell>
-                    <TableCell>{token.name}</TableCell>
-                    <TableCell>{token.usedQuota}/{token.totalQuota}</TableCell>
-                    <TableCell>{token.modelRestriction}</TableCell>
-                    <TableCell>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            onClick={() => {
+                              navigator.clipboard.writeText(token.tokenNumber);
+                              toast.success("API Key copied to clipboard");
+                            }}
+                          >
+                            Copy to Clipboard
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent className="bg-white text-black p-2 border border-gray-300 rounded shadow-lg">
+                          <p>{token.tokenNumber}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </TableCell>
+                  <TableCell>{token.name}</TableCell>
+                  <TableCell>{token.usedQuota}/{token.totalQuota}</TableCell>
+                  {/* <TableCell>
+                    <div className="flex flex-wrap gap-2 justify-center items-center">
+                      {token.modelRestriction.split(',').map((model, index) => (
+                        <span 
+                          key={index}
+                          className="px-2 py-1 bg-gray-100 rounded-md text-sm text-center"
+                        >
+                          {model.trim()}
+                        </span>
+                      ))}
+                    </div>
+                  </TableCell> */}
+                  <TableCell>
                     <Switch
-                        checked={token.status === 1}
-                        onCheckedChange={(checked) => handleStatusChange(token.id, checked)}
-                      />
-                    </TableCell>
-                    <TableCell>{new Date(token.expiresAt).toLocaleDateString()}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setCurrentToken(token)
-                            setIsEditOpen(true)
-                          }}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-red-500 hover:text-red-500"
-                          onClick={() => {
-                            setDeleteToken(token)
-                            setIsDeleteOpen(true)
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                      checked={token.status === 1}
+                      onCheckedChange={(checked) => handleStatusChange(token.id, checked)}
+                    />
+                  </TableCell>
+                  <TableCell>{new Date(token.expiresAt).toLocaleDateString()}</TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setCurrentToken(token)
+                          setIsEditOpen(true)
+                        }}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-red-500 hover:text-red-500"
+                        onClick={() => {
+                          setDeleteToken(token)
+                          setIsDeleteOpen(true)
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
               </TableBody>
             </Table>
           )}
@@ -452,7 +453,7 @@ export default function TokensPage() {
                 }
               />
             </div>
-            <div className="grid gap-2">
+            {/* <div className="grid gap-2">
               <label>Model Restriction</label>
               <MultipleSelector
                 defaultOptions={modelRestrictionOptions}
@@ -469,7 +470,7 @@ export default function TokensPage() {
                   } : null);
                 }}
               />
-            </div>
+            </div> */}
             <div className="grid gap-2">
               <label>Expired Time</label>
               <Popover>

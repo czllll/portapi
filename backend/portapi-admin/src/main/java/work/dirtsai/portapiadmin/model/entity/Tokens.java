@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Data
@@ -15,7 +16,7 @@ public class Tokens {
 
     private String tokenNumber;
     private String name;
-    private Date expiresAt;
+    private LocalDateTime expiresAt;
     private Integer userId;
 
     private Integer totalQuota;
@@ -23,8 +24,8 @@ public class Tokens {
     private String modelRestriction;
     private Integer status;
     private Long groupId;
-    private Date createdTime;
-    private Date updatedTime;
+    private LocalDateTime createdTime;
+    private LocalDateTime updatedTime;
     private Integer isDeleted;
 
 }

@@ -17,4 +17,10 @@ public interface TokensService  extends IService<Tokens> {
     boolean createTokens(TokensVO tokenVO);
 
     boolean updateTokensQuato(String tokenNumber, Integer consumeQuota);
+
+    /**
+     * 更新token
+     * @param tokenVO
+     */
+    boolean updateTokens(TokensVO tokenVO);
 }

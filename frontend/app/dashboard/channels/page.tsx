@@ -264,17 +264,6 @@ export default function ModelsPage() {
                 />
               </div>
 
-              <div className="grid gap-2">
-                <label>Remain Quote</label>
-                <Input
-                  type="number"
-                  value={newModel.remainQuote}
-                  onChange={(e) => setNewModel({ 
-                    ...newModel, 
-                    remainQuote: Number(e.target.value) 
-                  })}
-                />
-              </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
@@ -465,18 +454,7 @@ export default function ModelsPage() {
               />
             </div>
 
-            <div className="grid gap-2">
-              <label>Remain Quote</label>
-              <Input
-                type="number"
-                value={currentModel?.remainQuote}
-                onChange={(e) =>
-                  setCurrentModel(currentModel ? 
-                    { ...currentModel, remainQuote: Number(e.target.value) } : null
-                  )
-                }
-              />
-            </div>
+
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditOpen(false)}>

@@ -4,6 +4,7 @@ import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
 import work.dirtsai.common.common.BaseResponse;
 import work.dirtsai.common.common.UpdateQuotaRequest;
+import work.dirtsai.portapiadmin.common.ErrorCode;
 import work.dirtsai.portapiadmin.common.ResultUtils;
 import work.dirtsai.portapiadmin.model.entity.Tokens;
 import work.dirtsai.portapiadmin.model.vo.TokensVO;
@@ -24,8 +25,11 @@ public class TokensController {
     @PostMapping("/create")
     public BaseResponse<Boolean> save(@RequestBody TokensVO tokensVO) {
 
-        boolean result = tokensService.createTokens(tokensVO);
-        return ResultUtils.success(result);
+        try {
+            return ResultUtils.success(tokensService.createTokens(tokensVO));
+        } catch (Exception e) {
+            return (BaseResponse<Boolean>) ResultUtils.error(ErrorCode.OPERATION_ERROR.getCode(), e.getMessage());
+        }
     }
 
     /**
@@ -45,9 +49,13 @@ public class TokensController {
      * @param tokens 令牌
      */
     @PutMapping("/{id}")
-    public void update(@RequestBody Tokens tokens) {
+    public BaseResponse<Boolean> update(@RequestBody TokensVO tokens) {
         // 修改令牌
-        tokensService.updateById(tokens);
+        try {
+            return ResultUtils.success(tokensService.updateTokens(tokens));
+        } catch (Exception e) {
+            return (BaseResponse<Boolean>) ResultUtils.error(ErrorCode.OPERATION_ERROR.getCode(), e.getMessage());
+        }
 
     }
 

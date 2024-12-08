@@ -11,5 +11,8 @@ public interface WalletService {
     BigDecimal getBalance(Long userId);
     WalletRechargeRecord topUp(Long userId, BigDecimal amount, String promoCode);
     IPage<WalletRechargeRecord> getRechargeRecords(Long userId, long page, long size);
+
+    void updateWalletQuota(Integer userId, Integer deltaQuota);
     //Resource exportRechargeRecords(Long userId) throws IOException;
+
 }

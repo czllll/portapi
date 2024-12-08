@@ -151,4 +151,19 @@ public class WalletServiceImpl implements WalletService {
 //
 //        return new ByteArrayResource(stringWriter.toString().getBytes(StandardCharsets.UTF_8));
 //    }
+
+    @Override
+    public void updateWalletQuota(Integer userId, Integer deltaQuota) {
+        WalletBalance balance = walletBalanceMapper.selectById(userId);
+        if (balance == null) {
+            throw new RuntimeException("用户钱包不存在");
+        }
+        // 新余额
+        BigDecimal newBalance = balance.getBalance().subtract(new BigDecimal(deltaQuota));
+        if (newBalance.compareTo(BigDecimal.ZERO) < 0) {
+            throw new RuntimeException("余额不足");
+        }
+        balance.setBalance(newBalance);
+        walletBalanceMapper.updateById(balance);
+    }
 }
