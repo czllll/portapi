@@ -23,4 +23,10 @@ public interface TokensService  extends IService<Tokens> {
      * @param tokenVO
      */
     boolean updateTokens(TokensVO tokenVO);
+
+    /**
+     * 根据tokenNumber获取userId
+     * @param tokenNumber
+     */
+    Integer getUserIdByTokenNumber(String tokenNumber);
 }

@@ -10,9 +10,9 @@ import java.util.List;
 
 public interface ApiCallService extends IService<ApiCall> {
 
-    DashboardMetrics getMetrics(String timeRange);
+    DashboardMetrics getMetrics(String timeRange, Integer userId);
 
-    ApiCallTrends getTrends(String timeRange);
+    ApiCallTrends getTrends(String timeRange, Integer userId);
 
-    List<ModelStats> getModelDistribution(String timeRange);
+    List<ModelStats> getModelDistribution(String timeRange, Integer userId);
 }

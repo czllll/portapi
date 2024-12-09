@@ -16,6 +16,7 @@ public class ApiCall {
     private String tokenNumber;
     private String callModel;
     private Integer usedToken;
+    private Integer userId;
     private LocalDateTime createTime;
     private Integer status;
     private Integer responseTime;

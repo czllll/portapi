@@ -4,7 +4,6 @@ import {
   ChevronLeftIcon, 
   Settings,
   BarChartIcon,
-  CodeIcon,
   CloudIcon,
   Users,
   KeySquare,

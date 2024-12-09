@@ -7,6 +7,7 @@ import java.util.Date;
 @Data
 public class ApiCallDTO {
     private Integer id;
+    private Integer userId;
     private String tokenNumber;
     private String callModel;
     private Integer usedToken;

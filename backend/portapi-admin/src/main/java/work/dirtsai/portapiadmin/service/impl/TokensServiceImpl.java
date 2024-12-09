@@ -135,4 +135,14 @@ public class TokensServiceImpl extends ServiceImpl<TokensMapper, Tokens> impleme
         tokens.setUpdatedTime(LocalDateTime.now());
         return this.updateById(tokens);
     }
+
+
+    @Override
+    public Integer getUserIdByTokenNumber(String tokenNumber) {
+        Tokens tokens = this.getByTokenNumber(tokenNumber);
+        if (tokens == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "令牌不存在");
+        }
+        return tokens.getUserId();
+    }
 }
