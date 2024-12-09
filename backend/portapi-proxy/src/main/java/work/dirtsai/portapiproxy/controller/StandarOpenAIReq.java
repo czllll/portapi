@@ -19,8 +19,11 @@ import org.springframework.http.*;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import work.dirtsai.common.common.ApiCallDTO;
+import work.dirtsai.portapiproxy.constant.ModelConstants;
 import work.dirtsai.portapiproxy.service.StandardOpenAIRequestService;
 import work.dirtsai.portapiproxy.utils.HttpUtils;
+import work.dirtsai.portapiproxy.utils.ModelRequestConverter;
+
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.io.*;
 
@@ -62,32 +65,53 @@ public class StandarOpenAIReq {
         boolean isStream = rootBody.path("stream").asBoolean();
         String model = rootBody.path("model").asText();
 
-        if (isStream) {
+        // 获取模型公司和apikey
+        String modelCompany = ModelConstants.getModelCompany(model);
+        String apikey = standardOpenAIRequestService.getApiKeyByModelName(model);
+
+        // 转换请求格式
+        String transformedRequest = requestBody;
+        if ("google".equals(modelCompany)) {
+            transformedRequest = ModelRequestConverter.convertToGoogleFormat(requestBody, model);
+        } else if (isStream) {
+            // OpenAI的流式请求处理
             ObjectNode modifiedBody = (ObjectNode) rootBody;
             ObjectNode streamOptions = objectMapper.createObjectNode();
             streamOptions.put("include_usage", true);
             modifiedBody.set("stream_options", streamOptions);
-            requestBody = modifiedBody.toString();
+            transformedRequest = modifiedBody.toString();
         }
-
-        String apikey = standardOpenAIRequestService.getApiKeyByModelName(model);
 
         log.info("OkHttp Configuration - Read Timeout: {}s, Connect Timeout: {}s, Write Timeout: {}s",
                 client.readTimeoutMillis() / 1000,
                 client.connectTimeoutMillis() / 1000,
                 client.writeTimeoutMillis() / 1000);
 
-        Request request = new Request.Builder()
-                .url(openaiApiUrl + "/chat/completions")
-                .post(RequestBody.create(requestBody, okhttp3.MediaType.parse(MediaType.APPLICATION_JSON_VALUE)))
-                .addHeader(HttpHeaders.AUTHORIZATION, "Bearer " + apikey)
-                .build();
+        // 在 proxyRequest 方法中
+        Request.Builder requestBuilder = new Request.Builder()
+                .url(ModelConstants.getEndpointUrl(model, apikey, isStream))
+                .post(RequestBody.create(transformedRequest, okhttp3.MediaType.parse(MediaType.APPLICATION_JSON_VALUE)));
+        // 只有 OpenAI 等需要认证头的 API 才添加
+        if (ModelConstants.needsAuthHeader(model)) {
+            requestBuilder.addHeader(HttpHeaders.AUTHORIZATION, "Bearer " + apikey);
+        }
+        // google 流式传输添加 alt 参数
+        if (isStream && "google".equals(modelCompany)) {
+            requestBuilder.url(requestBuilder.build().url().newBuilder().addQueryParameter("alt", "sse").build());
+        }
+
+        Request request = requestBuilder.build();
 
         try {
             if (!isStream) {
                 // 非流式响应处理
                 Response response = client.newCall(request).execute();
                 String responseBody = response.body().string();
+
+                // 转换响应格式
+                if ("google".equals(modelCompany)) {
+                    responseBody = ModelRequestConverter.convertFromGoogleResponse(responseBody, false, model);
+                }
 
                 ObjectMapper mapper = new ObjectMapper();
                 JsonNode rootNode = mapper.readTree(responseBody);
@@ -105,7 +129,7 @@ public class StandarOpenAIReq {
                 servletResponse.setCharacterEncoding("UTF-8");
                 servletResponse.getWriter().write(responseBody);
 
-            } else{
+            } else {
                 AsyncContext asyncContext = servletRequest.startAsync();
                 asyncContext.setTimeout(360000);
 
@@ -113,7 +137,7 @@ public class StandarOpenAIReq {
                 servletResponse.setCharacterEncoding("UTF-8");
 
                 ServletOutputStream output = servletResponse.getOutputStream();
-                AtomicBoolean usageProcessed = new AtomicBoolean(false);  // 使用原子类型
+                AtomicBoolean usageProcessed = new AtomicBoolean(false);
 
                 client.newCall(request).enqueue(new Callback() {
                     @Override
@@ -125,11 +149,17 @@ public class StandarOpenAIReq {
 
                             String line;
                             while ((line = reader.readLine()) != null) {
+                                // 转换流式响应格式
+                                if ("google".equals(modelCompany)) {
+                                    line = ModelRequestConverter.convertFromGoogleResponse(line, true, model);
+
+                                }
+
                                 output.write((line + "\n").getBytes(StandardCharsets.UTF_8));
                                 if (line.isEmpty()) {
                                     output.flush();
                                 }
-                                if (!usageProcessed.get() && line.startsWith("data: ")) {  // 使用 get()
+                                if (!usageProcessed.get() && line.startsWith("data: ")) {
                                     String chunk = line.substring(6);
                                     try {
                                         if (!chunk.equals("[DONE]")) {
@@ -140,7 +170,7 @@ public class StandarOpenAIReq {
                                                 boolean updateQuota = standardOpenAIRequestService.updateTokenQuota(tokenNumber, totalTokens);
                                                 saveApiCall(model, tokenNumber, totalTokens, updateQuota ? 1 : 0, startTime);
                                                 log.info("Token quota updated successfully, totalTokens: {}", totalTokens);
-                                                usageProcessed.set(true);  // 使用 set()
+                                                usageProcessed.set(true);
                                             }
                                         }
                                     } catch (Exception e) {
@@ -150,7 +180,7 @@ public class StandarOpenAIReq {
                             }
                         } catch (Exception e) {
                             log.error("Error processing stream", e);
-                            if (!usageProcessed.get()) {  // 使用 get()
+                            if (!usageProcessed.get()) {
                                 saveApiCall(model, tokenNumber, 0, 0, startTime);
                             }
                         } finally {

@@ -64,8 +64,8 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, Model> implements
                     return testOpenAiModel(model);
 //                case "ANTHROPIC":
 //                    return testClaudeModel(model);
-//                case "GOOGLE":
-//                    return testGeminiModel(model);
+                case "GOOGLE":
+                    return testGeminiModel(model);
                 default:
                     throw new BusinessException(ErrorCode.SYSTEM_ERROR,
                             "Unsupported model company: " + model.getModelCompany());
@@ -107,6 +107,54 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, Model> implements
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR,
                     "OpenAI model connection test failed: " + e.getMessage());
+        }
+    }
+
+    private boolean testGeminiModel(Model model) throws JsonProcessingException {
+        Map<String, Object> requestBody = new HashMap<>();
+        /**
+         * {
+         * 	"contents": [
+         * 		        {
+         * 			"parts": [
+         *                {
+         * 					"text": "ping"
+         *                }
+         * 			]
+         *        }
+         * 	]
+         * } 按照这个body格式
+         */
+
+        requestBody.put("contents", Collections.singletonList(
+                new HashMap<String, Object>() {{
+                    put("parts", Collections.singletonList(
+                            new HashMap<String, String>() {{
+                                put("text", "ping");
+                            }}
+                    ));
+                }}
+        ));
+
+        ObjectMapper mapper = new ObjectMapper();
+
+        Request request = new Request.Builder()
+                .url("https://generativelanguage.googleapis.com/v1beta/models/" + model.getModelName() + ":generateContent?key=" + model.getRealApiKey())
+                .header("Content-Type", "application/json")
+                .post(RequestBody.create(
+                        MediaType.parse("application/json"),
+                        mapper.writeValueAsString(requestBody)))
+                .build();
+
+        try {
+            Response response = okHttpClient.newCall(request).execute();
+            boolean success = response.isSuccessful();
+            model.setUpdatedTime(LocalDateTime.now());
+            this.updateById(model);
+            return success;
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR,
+                    "Google model connection test failed: " + e.getMessage());
         }
     }
 }

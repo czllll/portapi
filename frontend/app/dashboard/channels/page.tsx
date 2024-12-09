@@ -213,7 +213,9 @@ export default function ModelsPage() {
     try {
       const response = await axios.post(`${BASE_URL}/model/test`, model); 
       if (response.data.data === true) {
-        toast.success(model.modelName + " connect successful");
+        toast.success(model.modelCompany + "'s API connect successful");
+      } else {
+        toast.error(model.modelCompany + "'s API connect failed");
       }
     } catch (error) {
       toast.error("connect failed: " + error);
