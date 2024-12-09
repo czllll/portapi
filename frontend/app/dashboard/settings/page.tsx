@@ -5,21 +5,20 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
+import axios from "@/lib/axios-config"
+import toast from "react-hot-toast"
 
 interface UserSettings {
-  name: string
+  id: number
+  username: string
   email: string
-  emailNotifications: boolean
-  productUpdates: boolean
 }
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState<UserSettings>({
-    name: "",
-    email: "",
-    emailNotifications: false,
-    productUpdates: false
+    id: 0,
+    username: "",
+    email: ""
   })
   const [loading, setLoading] = useState(true)
 
@@ -30,12 +29,17 @@ export default function SettingsPage() {
   const fetchSettings = async () => {
     try {
       setLoading(true)
-      // TODO: 调用后端获取用户设置接口
-      // const response = await fetch('/api/settings')
-      // const data = await response.json()
-      // setSettings(data)
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_BASE_API_URL}/user/current`)
+      const data = await response.data.data
+      console.log("usercurrent:",data)
+      setSettings({
+        id: data.userId,
+        username: data.username,
+        email: data.email
+      })
     } catch (error) {
       console.error('Failed to fetch settings:', error)
+      toast.error('获取用户信息失败') 
     } finally {
       setLoading(false)
     }
@@ -43,31 +47,11 @@ export default function SettingsPage() {
 
   const handleProfileUpdate = async () => {
     try {
-      // TODO: 调用后端更新用户资料接口
-      // await fetch('/api/settings/profile', {
-      //   method: 'PUT',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({
-      //     name: settings.name,
-      //     email: settings.email
-      //   })
-      // })
+      await axios.put(`${process.env.NEXT_PUBLIC_BASE_API_URL}/user/${settings.id}`, settings)
+      toast.success('Profile updated successfully')
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      console.error('Failed to update profile:', error)
-    }
-  }
-
-  const handleNotificationUpdate = async (key: 'emailNotifications' | 'productUpdates', value: boolean) => {
-    try {
-      // TODO: 调用后端更新通知设置接口
-      // await fetch('/api/settings/notifications', {
-      //   method: 'PUT',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ [key]: value })
-      // })
-      setSettings({ ...settings, [key]: value })
-    } catch (error) {
-      console.error('Failed to update notification settings:', error)
+      toast.error('Failed to update profile')
     }
   }
 
@@ -99,8 +83,8 @@ export default function SettingsPage() {
               <Input 
                 id="name" 
                 placeholder="Your name" 
-                value={settings.name}
-                onChange={(e) => setSettings({ ...settings, name: e.target.value })}
+                value={settings.username}
+                onChange={(e) => setSettings({ ...settings, username: e.target.value })}
               />
             </div>
             <div className="space-y-2">
@@ -114,35 +98,6 @@ export default function SettingsPage() {
               />
             </div>
             <Button onClick={handleProfileUpdate}>Save Changes</Button>
-          </CardContent>
-        </Card>
-
-        {/* 通知设置卡片 */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Notifications</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="email-notif">Email Notifications</Label>
-              <Switch 
-                id="email-notif" 
-                checked={settings.emailNotifications}
-                onCheckedChange={(checked) => 
-                  handleNotificationUpdate('emailNotifications', checked)
-                }
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="updates">Product Updates</Label>
-              <Switch 
-                id="updates" 
-                checked={settings.productUpdates}
-                onCheckedChange={(checked) => 
-                  handleNotificationUpdate('productUpdates', checked)
-                }
-              />
-            </div>
           </CardContent>
         </Card>
       </div>
