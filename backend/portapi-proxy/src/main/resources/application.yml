@@ -1,6 +1,8 @@
 spring:
   application:
     name: portapi-proxy
+  profiles:
+    active: dev
   cloud:
     nacos:
       discovery:

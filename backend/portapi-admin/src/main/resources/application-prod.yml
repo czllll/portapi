@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: portapi-admin
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER}
+
+server:
+  port: ${ADMIN_SERVICE_PORT:8081}
+
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION}
+
+internal:
+  secret: ${INTERNAL_SECRET}

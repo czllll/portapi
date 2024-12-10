@@ -1,12 +1,10 @@
 spring:
   application:
     name: portapi-gateway
-  profiles:
-    active: dev
   cloud:
     nacos:
       discovery:
-        server-addr: localhost:8848
+        server-addr: ${NACOS_SERVER}
     gateway:
       discovery:
         locator:
@@ -16,7 +14,7 @@ spring:
       globalcors:
         corsConfigurations:
           '[/**]':
-            allowedOrigins: "http://localhost:3000"
+            allowedOrigins: ${CORS_ALLOWED_ORIGINS}
             allowedMethods:
               - GET
               - POST
@@ -35,18 +33,15 @@ spring:
           predicates:
             - Path=/**
 
-
-
-
 server:
-  port: 8080
+  port: ${GATEWAY_PORT:8080}
 
 gateway:
-  secret: ${GATEWAY_SECRET:your-secret-key-here}
+  secret: ${GATEWAY_SECRET}
 
 internal:
-  secret: ${INTERNAL_SECRET:xHXYRaxYUJ6OYmFPPn0+j2aepYTWsxNzeG1vNwPnKLs=}
+  secret: ${INTERNAL_SECRET}
 
 jwt:
-  secret: Aoo/Lv+crFTY5wYzalGw5Pab6FVEYy/xnYZKGSjIvY4=
-  expiration: 3600000
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION}

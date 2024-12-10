@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: portapi-proxy
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER}
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+server:
+  port: ${PROXY_SERVICE_PORT:8090}
+
+internal:
+  secret: ${INTERNAL_SECRET}
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION}

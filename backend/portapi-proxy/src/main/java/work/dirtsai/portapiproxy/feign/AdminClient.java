@@ -10,7 +10,7 @@ import work.dirtsai.common.common.UpdateQuotaRequest;
 
 import java.util.List;
 
-@FeignClient(name = "portapi-admin1" , configuration = FeignConfig.class)
+@FeignClient(name = "portapi-admin" , configuration = FeignConfig.class)
 public interface AdminClient {
     @PutMapping("/api/tokens/quota")
     BaseResponse<Boolean> updateTokensQuota(@RequestBody UpdateQuotaRequest updateQuatoRequest);

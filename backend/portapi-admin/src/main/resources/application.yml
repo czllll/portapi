@@ -1,6 +1,8 @@
 spring:
   application:
-    name: portapi-admin1
+    name: portapi-admin
+  profiles:
+    active: dev
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/portapi_db
