@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
+import work.dirtsai.common.common.PageResponse;
 import work.dirtsai.portapiadmin.common.ErrorCode;
 import work.dirtsai.portapiadmin.common.Utils;
 import work.dirtsai.portapiadmin.exception.BusinessException;
@@ -38,33 +39,25 @@ public class TokensServiceImpl extends ServiceImpl<TokensMapper, Tokens> impleme
     }
 
     @Override
-    public List<TokensVO> getTokensList(Integer current, Integer size, Integer userId){
+    public PageResponse<TokensVO> getTokensList(Integer current, Integer size, Integer userId) {
+        QueryWrapper<Tokens> queryWrapper = new QueryWrapper<Tokens>()
+                .eq("is_deleted", 0)
+                .eq(userId != null, "user_id", userId)
+                .orderByDesc("updated_time");
+
         Page<Tokens> page = new Page<>(current, size);
-        Page<Tokens> tokensPage = this.page(page, new QueryWrapper<>());
+        Page<Tokens> tokensPage = this.page(page, queryWrapper);
 
-        // 筛选出非is_deleted的用户
-        tokensPage.getRecords().removeIf(tokens -> tokens.getIsDeleted() == 1);
-        // 筛选当前用户的令牌
-        if (userId != null) {
-            tokensPage.getRecords().removeIf(tokens -> !tokens.getUserId().equals(userId));
-        }
-        return tokensPage.getRecords().stream().map(tokens -> {
+        List<TokensVO> records = tokensPage.getRecords().stream()
+                .map(this::convertToVO)
+                .collect(Collectors.toList());
 
-            TokensVO tokensVO = new TokensVO();
-            tokensVO.setId(tokens.getId());
-            tokensVO.setTokenNumber(tokens.getTokenNumber());
-            tokensVO.setUserId(tokens.getUserId());
-            tokensVO.setStatus(tokens.getStatus());
-            tokensVO.setCreatedTime(tokens.getCreatedTime());
-            tokensVO.setName(tokens.getName());
-            tokensVO.setExpiresAt(tokens.getExpiresAt());
-            tokensVO.setTotalQuota(tokens.getTotalQuota());
-            tokensVO.setUsedQuota(tokens.getUsedQuota());
-            tokensVO.setGroupId(tokens.getGroupId());
-            tokensVO.setModelRestriction(tokens.getModelRestriction());
-            return tokensVO;
-
-        }).collect(Collectors.toList());
+        return new PageResponse<>(
+                records,
+                tokensPage.getTotal(),
+                tokensPage.getCurrent(),
+                tokensPage.getSize()
+        );
     }
 
     @Override
@@ -144,5 +137,22 @@ public class TokensServiceImpl extends ServiceImpl<TokensMapper, Tokens> impleme
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "令牌不存在");
         }
         return tokens.getUserId();
+    }
+
+
+    private TokensVO convertToVO(Tokens tokens) {
+        TokensVO tokensVO = new TokensVO();
+        tokensVO.setId(tokens.getId());
+        tokensVO.setTokenNumber(tokens.getTokenNumber());
+        tokensVO.setUserId(tokens.getUserId());
+        tokensVO.setStatus(tokens.getStatus());
+        tokensVO.setCreatedTime(tokens.getCreatedTime());
+        tokensVO.setName(tokens.getName());
+        tokensVO.setExpiresAt(tokens.getExpiresAt());
+        tokensVO.setTotalQuota(tokens.getTotalQuota());
+        tokensVO.setUsedQuota(tokens.getUsedQuota());
+        tokensVO.setGroupId(tokens.getGroupId());
+        tokensVO.setModelRestriction(tokens.getModelRestriction());
+        return tokensVO;
     }
 }

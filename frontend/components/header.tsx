@@ -66,30 +66,9 @@ export default function Header() {
     <header className="sticky top-0 z-50 w-full h-16 border-b bg-background">
       <div className="container h-full mx-auto px-4 flex items-center justify-between">
         <div className="w-32"></div>
-        {/* 搜索框 */}
-        <div className="flex-1 flex justify-center">
-          <form className="relative w-full max-w-xl">
-            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Search..." 
-              className="pl-10 w-full"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </form>
-        </div>
 
-        {/* 右侧工具栏 */}
         <div className="flex items-center gap-2">
-          {/* 通知按钮 */}
-          <Button variant="ghost" size="icon" className="relative">
-            <BellIcon className="h-5 w-5" />
-            {notification.unreadCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-600" />
-            )}
-          </Button>
 
-          {/* 主题切换 */}
           <Button
             variant="ghost"
             size="icon"
@@ -102,7 +81,6 @@ export default function Header() {
             )}
           </Button>
 
-          {/* 用户菜单 */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-9 w-9 rounded-full">

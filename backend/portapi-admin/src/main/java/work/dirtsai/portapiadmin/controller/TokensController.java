@@ -3,6 +3,7 @@ package work.dirtsai.portapiadmin.controller;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
 import work.dirtsai.common.common.BaseResponse;
+import work.dirtsai.common.common.PageResponse;
 import work.dirtsai.common.common.UpdateQuotaRequest;
 import work.dirtsai.portapiadmin.common.ErrorCode;
 import work.dirtsai.portapiadmin.common.ResultUtils;
@@ -77,13 +78,13 @@ public class TokensController {
      * @param pageSize 每页数量
      */
     @GetMapping("/page")
-    public BaseResponse<List<TokensVO>> page(
-            @RequestParam (defaultValue = "1") Integer currentPage,
+    public BaseResponse<PageResponse<TokensVO>> page(
+            @RequestParam(defaultValue = "1") Integer currentPage,
             @RequestParam(defaultValue = "10") Integer pageSize,
             @RequestParam Integer userId) {
         // 分页查询令牌
-        List<TokensVO> tokensList = tokensService.getTokensList(currentPage, pageSize, userId);
-        return ResultUtils.success(tokensList);
+        PageResponse<TokensVO> pageResponse = tokensService.getTokensList(currentPage, pageSize, userId);
+        return ResultUtils.success(pageResponse);
     }
 
     /**

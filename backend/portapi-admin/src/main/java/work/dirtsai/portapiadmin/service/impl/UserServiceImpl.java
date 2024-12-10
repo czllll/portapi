@@ -14,6 +14,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import work.dirtsai.common.common.PageResponse;
 import work.dirtsai.portapiadmin.common.ErrorCode;
 import work.dirtsai.portapiadmin.exception.BusinessException;
 import work.dirtsai.portapiadmin.mapper.UserMapper;
@@ -204,22 +205,24 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public List<UserVO> getUserList(Integer currentPage, Integer pageSize) {
-        Page<User> page = new Page<>(currentPage, pageSize);
-        Page<User> userPage = this.page(page, new QueryWrapper<>());
+    public PageResponse<UserVO> getUserList(Integer current, Integer size) {
+        QueryWrapper<User> queryWrapper = new QueryWrapper<User>()
+                .eq("is_deleted", 0)
+                .orderByDesc("update_time");
 
-        // 筛选出非is_deleted的用户
-        userPage.getRecords().removeIf(user -> user.getIsDeleted() == 1);
+        Page<User> page = new Page<>(current, size);
+        Page<User> userPage = this.page(page, queryWrapper);
 
-        return userPage.getRecords().stream().map(user -> {
-            UserVO userVO = new UserVO();
-            userVO.setUserId(user.getId());
-            userVO.setUsername(user.getUsername());
-            userVO.setEmail(user.getEmail());
-            userVO.setRole(user.getRole());
-            userVO.setStatus(user.getStatus());
-            return userVO;
-        }).collect(Collectors.toList());
+        List<UserVO> records = userPage.getRecords().stream()
+                .map(this::convertToVO)
+                .collect(Collectors.toList());
+
+        return new PageResponse<>(
+                records,
+                userPage.getTotal(),
+                userPage.getCurrent(),
+                userPage.getSize()
+        );
     }
 
     @Override
@@ -255,5 +258,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         user.setEmail(request.getEmail());
         user.setRole(request.getRole());
         return this.updateById(user);
+    }
+
+    private UserVO convertToVO(User user) {
+        UserVO userVO = new UserVO();
+        userVO.setUserId(user.getId());
+        userVO.setUsername(user.getUsername());
+        userVO.setEmail(user.getEmail());
+        userVO.setRole(user.getRole());
+        userVO.setStatus(user.getStatus());
+        return userVO;
     }
 }

@@ -39,7 +39,8 @@ const useUserStore = create<UserStore>((set) => ({
 
   setUser: (user) => set({ user }),
   
-  logout: () => set({ user: null })
+  logout: () => set({ user: null }),
+
 }))
 
 export default useUserStore;

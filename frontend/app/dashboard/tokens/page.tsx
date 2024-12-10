@@ -52,6 +52,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { format } from "date-fns"
 import useUserStore from "@/stores/useUserStore"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination"
 
 
 interface Token {
@@ -72,6 +73,9 @@ interface Token {
 
 export default function TokensPage() {
   const BASE_URL = process.env.NEXT_PUBLIC_BASE_API_URL
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+  const [total, setTotal] = useState(0)
   const [tokens, setTokens] = useState<Token[]>([])
   const [loading, setLoading] = useState(true)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
@@ -85,21 +89,25 @@ export default function TokensPage() {
   const fetchTokens = async () => {
     if (!user) return;
     try {
-      setLoading(true)
-      const response = await axios.get(`${BASE_URL}/tokens/page`, {
-        params: {
-          current: 1,
-          size: 10,
-          userId: user?.userId
-        }
-      });
-        setTokens(response.data.data)    
+        setLoading(true)
+        const response = await axios.get(`${BASE_URL}/tokens/page`, {
+            params: {
+                currentPage: currentPage,  
+                pageSize: pageSize,        
+                userId: user?.userId
+            }
+        });
+        
+        const pageResponse = response.data.data;
+        setTokens(pageResponse.records)    
+        setTotal(pageResponse.total)       
     } catch (error) {
-      console.error('Failed to fetch tokens:', error)
+        console.error('Failed to fetch tokens:', error)
     } finally {
-      setLoading(false)
+        setLoading(false)
     }
   }
+
   useEffect(() => {
     if (user) {
       fetchTokens(); 
@@ -112,10 +120,10 @@ export default function TokensPage() {
         userId: user.userId,
         groupId: 1,
       })
-      // fetchModelRestrictions();
+      
     }
     
-  }, [user]);
+  }, [currentPage, pageSize, user]);
 
 
   const handleCreate = async () => {
@@ -232,7 +240,7 @@ export default function TokensPage() {
 
 
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+    <div className="flex-1 space-y-4 p-4 md:pt-0 px-8">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Tokens</h2>
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
@@ -260,22 +268,7 @@ export default function TokensPage() {
                   onChange={(e) => setNewToken({ ...newToken, totalQuota: parseInt(e.target.value) })}
                 />
               </div>
-              {/* <div className="grid gap-2">
-                <label>Model Restriction</label>
-                <MultipleSelector
-                  defaultOptions={modelRestrictionOptions}
-                  placeholder="Model Restriction"
-                  emptyIndicator={
-                    <p className="text-center text-lg leading-10 text-gray-600 dark:text-gray-400">
-                      no results found.
-                    </p>
-                  }
-                  onChange={(option) => {
-                    setNewToken({ ...newToken, modelRestriction: 
-                        option.map((item) => item.value).join(",") });
-                  }}
-                />
-              </div> */}
+
               <div className="grid gap-2">
                 <label>Expired Time</label>
                 <Popover>
@@ -332,7 +325,6 @@ export default function TokensPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Token List</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -342,9 +334,9 @@ export default function TokensPage() {
           ) : (
             <Table>
               <TableHeader>
-                <TableRow className="text-center font-bold">
-                  <TableCell>Token Number</TableCell>
+                <TableRow className="text-center font-bold cursor-default">
                   <TableCell>Name</TableCell>
+                  <TableCell>ApiKey</TableCell>
                   <TableCell>Quota</TableCell>
                   {/* <TableCell>Model Restriction</TableCell> */}
                   <TableCell>Status</TableCell>
@@ -355,6 +347,8 @@ export default function TokensPage() {
               <TableBody className="text-center">
               {tokens.map((token) => (
                 <TableRow key={token.id}>
+
+                  <TableCell className="cursor-default">{token.name}</TableCell>
                   <TableCell>
                     <TooltipProvider>
                       <Tooltip>
@@ -364,6 +358,7 @@ export default function TokensPage() {
                               navigator.clipboard.writeText(token.tokenNumber);
                               toast.success("API Key copied to clipboard");
                             }}
+                            className="bg-gray-400 hover:bg-gray-500"
                           >
                             Copy to Clipboard
                           </Button>
@@ -374,8 +369,7 @@ export default function TokensPage() {
                       </Tooltip>
                     </TooltipProvider>
                   </TableCell>
-                  <TableCell>{token.name}</TableCell>
-                  <TableCell>{token.usedQuota}/{token.totalQuota}</TableCell>
+                  <TableCell className="cursor-default">{token.usedQuota}/{token.totalQuota}</TableCell>
                   {/* <TableCell>
                     <div className="flex flex-wrap gap-2 justify-center items-center">
                       {token.modelRestriction.split(',').map((model, index) => (
@@ -394,7 +388,7 @@ export default function TokensPage() {
                       onCheckedChange={(checked) => handleStatusChange(token.id, checked)}
                     />
                   </TableCell>
-                  <TableCell>{new Date(token.expiresAt).toLocaleDateString()}</TableCell>
+                  <TableCell className="cursor-default">{new Date(token.expiresAt).toLocaleDateString()}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
                       <Button
@@ -424,7 +418,44 @@ export default function TokensPage() {
               ))}
               </TableBody>
             </Table>
+            
           )}
+            <div className="flex items-center justify-end space-x-2 py-4">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      onClick={() => {
+                        if (currentPage > 1) {
+                          setCurrentPage(currentPage - 1)
+                        }
+                      }} 
+                      className="cursor-pointer"
+                    />
+                  </PaginationItem>
+
+                  
+                  <PaginationItem>
+                    <PaginationLink
+                      className="cursor-default"
+                    >
+                      {currentPage} / {Math.ceil(total / pageSize)}
+                    </PaginationLink>
+                  </PaginationItem>
+
+                  <PaginationItem>
+                    <PaginationNext 
+                      onClick={() => {
+                        if (currentPage < Math.ceil(total / pageSize)) {
+                          setCurrentPage(currentPage + 1)
+                        }
+                      }}
+                      className="cursor-pointer"
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
         </CardContent>
       </Card>
 

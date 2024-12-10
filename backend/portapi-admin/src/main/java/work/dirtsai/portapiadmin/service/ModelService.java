@@ -1,6 +1,7 @@
 package work.dirtsai.portapiadmin.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import work.dirtsai.common.common.PageResponse;
 import work.dirtsai.portapiadmin.model.entity.Model;
 
 import java.util.List;
@@ -25,7 +26,7 @@ public interface ModelService extends IService<Model> {
      * @param size
      * @return
      */
-    List<Model> getModelList(Integer current, Integer size);
+    PageResponse<Model> getModelList(Integer current, Integer size);
 
 
     /**

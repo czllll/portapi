@@ -2,6 +2,7 @@ package work.dirtsai.portapiadmin.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import jakarta.servlet.http.HttpServletRequest;
+import work.dirtsai.common.common.PageResponse;
 import work.dirtsai.portapiadmin.model.dto.UserDTO;
 import work.dirtsai.portapiadmin.model.dto.UserLoginDTO;
 import work.dirtsai.portapiadmin.model.dto.UserRegisterDTO;
@@ -60,7 +61,7 @@ public interface UserService extends IService<User> {
      * 获取用户列表
      * @return 用户列表
      */
-    List<UserVO> getUserList(Integer currentPage, Integer pageSize);
+    PageResponse<UserVO> getUserList(Integer currentPage, Integer pageSize);
 
 
     /**

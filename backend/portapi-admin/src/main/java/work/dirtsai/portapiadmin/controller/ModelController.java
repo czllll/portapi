@@ -4,6 +4,7 @@ package work.dirtsai.portapiadmin.controller;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
 import work.dirtsai.common.common.BaseResponse;
+import work.dirtsai.common.common.PageResponse;
 import work.dirtsai.portapiadmin.common.ResultUtils;
 import work.dirtsai.portapiadmin.model.entity.Model;
 import work.dirtsai.portapiadmin.service.ModelService;
@@ -42,9 +43,9 @@ public class ModelController {
      *
      */
     @GetMapping("/page")
-    public List<Model> page(@RequestParam(defaultValue = "1") Integer current,
-                            @RequestParam(defaultValue = "10") Integer size) {
-        return modelService.getModelList(current, size);
+    public BaseResponse<PageResponse<Model>> page(@RequestParam(defaultValue = "1") Integer current,
+                                    @RequestParam(defaultValue = "10") Integer size) {
+        return ResultUtils.success(modelService.getModelList(current, size));
     }
 
     /**

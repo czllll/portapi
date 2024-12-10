@@ -18,7 +18,8 @@ import {
   Legend,
   PieChart,
   Pie,
-  Cell
+  Cell,
+  ResponsiveContainer
 } from 'recharts'
 import axios from '@/lib/axios-config'
 import useUserStore from "@/stores/useUserStore";
@@ -133,7 +134,8 @@ export default function AnalyticsPage () {
   ]
 
   return (
-    <div className='flex-1 space-y-4 p-4 md:p-8 pt-6'>
+    <div className="flex-1 space-y-4 p-4 md:pt-0 px-8">
+
       <div className='flex items-center justify-between'>
         <h2 className='text-3xl font-bold tracking-tight'>Analytics</h2>
         <Select value={timeRange} onValueChange={setTimeRange}>
@@ -169,24 +171,24 @@ export default function AnalyticsPage () {
           <CardHeader>
             <CardTitle>Request Trends</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className='h-[400px]'>
             {trends && (
-              <LineChart
-                width={500}
-                height={300}
-                data={trends.timePoints.map((time, index) => ({
-                  time,
-                  requests: trends.requestCounts[index]
-                }))}
-                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray='3 3' />
-                <XAxis dataKey='time' />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line type='monotone' dataKey='requests' stroke='#8884d8' />
-              </LineChart>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={trends.timePoints.map((time, index) => ({
+                    time,
+                    requests: trends.requestCounts[index]
+                  }))}
+                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray='3 3' />
+                  <XAxis dataKey='time' />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line type='monotone' dataKey='requests' stroke='#8884d8' />
+                </LineChart>
+              </ResponsiveContainer>
             )}
           </CardContent>
         </Card>
@@ -195,29 +197,31 @@ export default function AnalyticsPage () {
           <CardHeader>
             <CardTitle>Model Distribution</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className='h-[400px]'>
             {modelDistribution && (
-              <PieChart width={500} height={300}>
-                <Pie
-                  data={modelDistribution}
-                  dataKey='callCount'
-                  nameKey='modelName'
-                  cx='50%'
-                  cy='50%'
-                  outerRadius={100}
-                  fill='#8884d8'
-                  label
-                >
-                  {modelDistribution.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={modelDistribution}
+                    dataKey='callCount'
+                    nameKey='modelName'
+                    cx='50%'
+                    cy='50%'
+                    outerRadius="90%"
+                    fill='#8884d8'
+                    label
+                  >
+                    {modelDistribution.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
             )}
           </CardContent>
         </Card>
@@ -226,24 +230,24 @@ export default function AnalyticsPage () {
           <CardHeader>
             <CardTitle>Response Time Trends</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className='h-[400px]'>
             {trends && (
-              <LineChart
-                width={500}
-                height={300}
-                data={trends.timePoints.map((time, index) => ({
-                  time,
-                  responseTime: trends.avgResponseTimes[index]
-                }))}
-                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray='3 3' />
-                <XAxis dataKey='time' />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line type='monotone' dataKey='responseTime' stroke='#82ca9d' />
-              </LineChart>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={trends.timePoints.map((time, index) => ({
+                    time,
+                    responseTime: trends.avgResponseTimes[index]
+                  }))}
+                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray='3 3' />
+                  <XAxis dataKey='time' />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line type='monotone' dataKey='responseTime' stroke='#82ca9d' />
+                </LineChart>
+              </ResponsiveContainer>
             )}
           </CardContent>
         </Card>
@@ -252,24 +256,24 @@ export default function AnalyticsPage () {
           <CardHeader>
             <CardTitle>Token Usage Trends</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className='h-[400px]'>
             {trends && (
-              <LineChart
-                width={500}
-                height={300}
-                data={trends.timePoints.map((time, index) => ({
-                  time,
-                  tokens: trends.tokenSums[index]
-                }))}
-                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray='3 3' />
-                <XAxis dataKey='time' />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line type='monotone' dataKey='tokens' stroke='#ffc658' />
-              </LineChart>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={trends.timePoints.map((time, index) => ({
+                    time,
+                    tokens: trends.tokenSums[index]
+                  }))}
+                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray='3 3' />
+                  <XAxis dataKey='time' />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line type='monotone' dataKey='tokens' stroke='#ffc658' />
+                </LineChart>
+              </ResponsiveContainer>
             )}
           </CardContent>
         </Card>

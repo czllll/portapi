@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Resource;
 import okhttp3.*;
 import org.springframework.stereotype.Service;
+import work.dirtsai.common.common.PageResponse;
 import work.dirtsai.portapiadmin.common.ErrorCode;
 import work.dirtsai.portapiadmin.exception.BusinessException;
 import work.dirtsai.portapiadmin.mapper.ModelMapper;
@@ -48,13 +49,22 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, Model> implements
     }
 
     @Override
-    public List<Model> getModelList(Integer current, Integer size) {
-        // 只显示is_deleted为0的模型
-        QueryWrapper<Model> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("is_deleted", 0);
-        Page<Model> page = new Page<>(current, size);
-        return this.page(page, queryWrapper).getRecords();
+    public PageResponse<Model> getModelList(Integer current, Integer size) {
+        QueryWrapper<Model> queryWrapper = new QueryWrapper<Model>()
+                .eq("is_deleted", 0)
+                .orderByDesc("updated_time");
 
+        Page<Model> page = new Page<>(current, size);
+        Page<Model> modelPage = this.page(page, queryWrapper);
+
+        List<Model> records = modelPage.getRecords();
+
+        return new PageResponse<>(
+                records,
+                modelPage.getTotal(),
+                modelPage.getCurrent(),
+                modelPage.getSize()
+        );
     }
 
     public boolean testModel(Model model) {

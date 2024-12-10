@@ -38,11 +38,11 @@ public class GatewayAuthFilter implements Filter {
         HttpServletResponse httpResponse = (HttpServletResponse) response;
         long startTime = System.currentTimeMillis();
         String requestId = httpRequest.getHeader("X-Gateway-Request-Id");
-        //验证签名
-//        if (!verifyInternalAuth(httpRequest)) {
-//            httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-//            return;
-//        }
+        //验证内部签名
+        if (!verifyInternalAuth(httpRequest)) {
+            httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
 
         try {
             chain.doFilter(request, response);

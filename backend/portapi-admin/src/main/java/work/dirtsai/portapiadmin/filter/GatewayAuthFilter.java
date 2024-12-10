@@ -40,11 +40,11 @@ public class GatewayAuthFilter implements Filter {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
 
-//        //验证签名
-//        if (!verifyInternalAuth(httpRequest)) {
-//            httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-//            return;
-//        }
+        //验证签名
+        if (!verifyInternalAuth(httpRequest)) {
+            httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
         chain.doFilter(request, response);
     }
 

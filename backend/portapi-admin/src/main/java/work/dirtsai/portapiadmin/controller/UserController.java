@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import work.dirtsai.common.common.BaseResponse;
+import work.dirtsai.common.common.PageResponse;
 import work.dirtsai.portapiadmin.common.ErrorCode;
 import work.dirtsai.portapiadmin.common.ResultUtils;
 import work.dirtsai.portapiadmin.exception.BusinessException;
@@ -54,11 +55,11 @@ public class UserController {
     }
 
     @GetMapping("/page")
-    public BaseResponse<List<UserVO>> getUserList(
+    public BaseResponse<PageResponse<UserVO>> getUserList(
             @RequestParam(defaultValue = "1") Integer currentPage,
             @RequestParam(defaultValue = "10") Integer pageSize
     ) {
-        List<UserVO> userList = userService.getUserList(currentPage, pageSize);
+        PageResponse<UserVO> userList = userService.getUserList(currentPage, pageSize);
         return ResultUtils.success(userList);
     }
 

@@ -1,6 +1,7 @@
 package work.dirtsai.portapiadmin.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import work.dirtsai.common.common.PageResponse;
 import work.dirtsai.portapiadmin.model.entity.Tokens;
 import work.dirtsai.portapiadmin.model.vo.TokensVO;
 
@@ -10,7 +11,7 @@ public interface TokensService  extends IService<Tokens> {
 
     boolean deleteTokensById(Long id);
 
-    List<TokensVO> getTokensList(Integer current, Integer size, Integer userId);
+    PageResponse<TokensVO> getTokensList(Integer current, Integer size, Integer userId);
 
     boolean updateTokensStatus(Long id, Integer status);
 

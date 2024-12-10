@@ -2,6 +2,7 @@ import { authService } from "@/services/auth"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import toast from "react-hot-toast"
+import { set } from "date-fns"
 
 interface RegisterFormData {
     username: string
@@ -56,6 +57,7 @@ export const useAuth = () => {
         try {
             await authService.login(formData)
             await fetchCurrentUser()
+            toast.success('登录成功')
             router.push('/dashboard/analytics')
             return true
         } catch (error) {
@@ -76,6 +78,7 @@ export const useAuth = () => {
         try {
             const user = await authService.getCurrentUser()
             setCurrentUser(user)
+            console.log("usercurrentinuseAuth:",user)
             return user
         } catch (error) {
             if (error instanceof Error) {
