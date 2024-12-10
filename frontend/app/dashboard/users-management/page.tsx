@@ -13,8 +13,7 @@ import {
   DialogContent,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
-  DialogTrigger
+  DialogTitle
 } from '@/components/ui/dialog'
 import {
   AlertDialog,
@@ -63,7 +62,7 @@ export default function UsersPage () {
   const [deleteUser, setDeleteUser] = useState<User | null>(null)
   const [total, setTotal] = useState(0)
   const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
+  const [pageSize] = useState(10)
 
   const fetchUsers = async () => {
     try {

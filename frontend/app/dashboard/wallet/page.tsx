@@ -18,7 +18,7 @@ import {
   DialogTitle,
   DialogTrigger
 } from '@/components/ui/dialog'
-import { Wallet, Download, Plus, AlertCircle } from 'lucide-react'
+import { Wallet, Plus, AlertCircle } from 'lucide-react'
 import {
   Tooltip,
   TooltipContent,

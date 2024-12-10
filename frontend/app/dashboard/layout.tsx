@@ -13,7 +13,7 @@ export default function DashboardLayout({
 }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const [isSmallScreen, setIsSmallScreen] = useState(false)
-  const { user, loading, error, fetchUser } = useUserStore()
+  const { fetchUser } = useUserStore()
 
   useEffect(() => {
     const handleResize = () => {

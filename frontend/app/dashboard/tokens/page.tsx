@@ -3,8 +3,7 @@ import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
+  CardHeader
 } from "@/components/ui/card"
 import {
   Table,
@@ -74,7 +73,7 @@ interface Token {
 export default function TokensPage() {
   const BASE_URL = process.env.NEXT_PUBLIC_BASE_API_URL
   const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
+  const [pageSize] = useState(10)
   const [total, setTotal] = useState(0)
   const [tokens, setTokens] = useState<Token[]>([])
   const [loading, setLoading] = useState(true)

@@ -12,36 +12,21 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu"
 import {
-  BellIcon,
   MoonIcon,
-  SearchIcon,
   Settings,
   SunIcon,
   LogOutIcon,
 } from "lucide-react"
 import { useTheme } from "next-themes"
-import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useRouter } from "next/navigation"
 import Cookies from 'js-cookie';
 import useUserStore from "@/stores/useUserStore"
 
-interface Notification {
-  id: string
-  unreadCount: number
-}
-
-const defaultNotification: Notification = {
-  id: "1",
-  unreadCount: 0
-}
-
 export default function Header() {
   const { theme, setTheme } = useTheme()
   const router = useRouter()
   const [mounted, setMounted] = useState(false)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [notification, ] = useState<Notification>(defaultNotification)
   const {user} = useUserStore();
 
   useEffect(() => {

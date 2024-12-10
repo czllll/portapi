@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input"
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
@@ -33,9 +32,6 @@ export default function LoginPage() {
     <Card className="w-[380px]">
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl text-center">Sign in</CardTitle>
-        <CardDescription className="text-center">
-          Enter your email and password to access your account
-        </CardDescription>
       </CardHeader>
       <form onSubmit={onSubmit}>
         <CardContent className="space-y-4">
@@ -62,7 +58,7 @@ export default function LoginPage() {
               id="password"
               type="password"
               name="password"
-              placeholder="Enter your passwor2323d"
+              placeholder="Enter your password"
               minLength={8}
               maxLength={20}
               title="Password must be between 8 and 20 characters"
@@ -89,7 +85,7 @@ export default function LoginPage() {
           <p className="text-center text-sm text-muted-foreground">
             Don&apos;t have an account?{" "}
             <Link
-              href="/register"
+              href="/auth/register"
               className="text-primary hover:underline"
             >
               Sign up

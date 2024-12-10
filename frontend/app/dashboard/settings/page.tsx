@@ -50,6 +50,7 @@ export default function SettingsPage() {
       await axios.put(`${process.env.NEXT_PUBLIC_BASE_API_URL}/user/${settings.id}`, settings)
       toast.success('Profile updated successfully')
     } catch (error) {
+      console.error('Failed to update profile:', error)
       toast.error('Failed to update profile')
     }
   }

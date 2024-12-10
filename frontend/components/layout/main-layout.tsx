@@ -13,9 +13,8 @@ export default function MainLayout({ children }: MainLayoutProps) {
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
       <Sidebar 
-        isOpen={isSidebarOpen} 
-        onToggle={() => setIsSidebarOpen(!isSidebarOpen)} 
-      />
+        isOpen={isSidebarOpen}
+        onToggle={() => setIsSidebarOpen(!isSidebarOpen)} isSmallScreen={false}      />
       <div className={cn(
         "transition-all duration-300",
         isSidebarOpen ? "pl-64" : "pl-16"
