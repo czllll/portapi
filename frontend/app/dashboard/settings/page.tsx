@@ -49,7 +49,6 @@ export default function SettingsPage() {
     try {
       await axios.put(`${process.env.NEXT_PUBLIC_BASE_API_URL}/user/${settings.id}`, settings)
       toast.success('Profile updated successfully')
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       toast.error('Failed to update profile')
     }
@@ -66,7 +65,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="flex-1 space-y-4 p-4 md:pt-0 px-8">
+    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Settings</h2>
       </div>

@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import work.dirtsai.common.common.PageResponse;
 import work.dirtsai.portapiadmin.mapper.PromoCodeMapper;
 import work.dirtsai.portapiadmin.mapper.WalletBalanceMapper;
 import work.dirtsai.portapiadmin.mapper.WalletRechargeRecordMapper;
@@ -110,47 +111,21 @@ public class WalletServiceImpl implements WalletService {
     }
 
     @Override
-    public IPage<WalletRechargeRecord> getRechargeRecords(Long userId, long page, long size) {
-        Page<WalletRechargeRecord> pageParam = new Page<>(page, size);
-        LambdaQueryWrapper<WalletRechargeRecord> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(WalletRechargeRecord::getUserId, userId)
+    public PageResponse<WalletRechargeRecord> getRechargeRecords(Long userId, Integer current, Integer size) {
+        LambdaQueryWrapper<WalletRechargeRecord> wrapper = new LambdaQueryWrapper<WalletRechargeRecord>()
+                .eq(WalletRechargeRecord::getUserId, userId)
                 .orderByDesc(WalletRechargeRecord::getCreatedAt);
 
-        return rechargeRecordMapper.selectPage(pageParam, wrapper);
-    }
+        Page<WalletRechargeRecord> page = new Page<>(current, size);
+        Page<WalletRechargeRecord> recordPage = rechargeRecordMapper.selectPage(page, wrapper);
 
-//    @Override
-//    public Resource exportRechargeRecords(Long userId) throws IOException {
-//        LambdaQueryWrapper<WalletRechargeRecord> wrapper = new LambdaQueryWrapper<>();
-//        wrapper.eq(WalletRechargeRecord::getUserId, userId)
-//                .orderByDesc(WalletRechargeRecord::getCreatedAt);
-//
-//        List<WalletRechargeRecord> records = rechargeRecordMapper.selectList(wrapper);
-//
-//        StringWriter stringWriter = new StringWriter();
-//        CSVWriter csvWriter = new CSVWriter(stringWriter);
-//
-//        // 写入CSV头
-//        csvWriter.writeNext(new String[]{"日期", "金额", "优惠码", "优惠金额", "实付金额", "支付方式", "状态"});
-//
-//        // 写入数据
-//        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-//        for (WalletRechargeRecord record : records) {
-//            csvWriter.writeNext(new String[]{
-//                    record.getCreatedAt().format(formatter),
-//                    record.getAmount().toString(),
-//                    record.getPromoCode(),
-//                    record.getDiscountAmount().toString(),
-//                    record.getFinalAmount().toString(),
-//                    record.getPaymentMethod(),
-//                    record.getStatus()
-//            });
-//        }
-//
-//        csvWriter.close();
-//
-//        return new ByteArrayResource(stringWriter.toString().getBytes(StandardCharsets.UTF_8));
-//    }
+        return new PageResponse<>(
+                recordPage.getRecords(),
+                recordPage.getTotal(),
+                recordPage.getCurrent(),
+                recordPage.getSize()
+        );
+    }
 
     @Override
     public void updateWalletQuota(Integer userId, Integer deltaQuota) {

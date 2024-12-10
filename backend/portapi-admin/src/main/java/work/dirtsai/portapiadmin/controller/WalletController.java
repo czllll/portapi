@@ -9,6 +9,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import work.dirtsai.common.common.BaseResponse;
+import work.dirtsai.common.common.PageResponse;
+import work.dirtsai.portapiadmin.common.ResultUtils;
 import work.dirtsai.portapiadmin.common.SecurityUtils;
 import work.dirtsai.portapiadmin.model.dto.TopUpRequestDTO;
 import work.dirtsai.portapiadmin.model.dto.TopUpResponseDTO;
@@ -56,25 +59,12 @@ public class WalletController {
         }
     }
     @GetMapping("/records")
-    public ResponseEntity<Page<WalletRechargeRecord>> getRechargeRecords(
-            @RequestParam(defaultValue = "0") int page,
+    public BaseResponse<PageResponse<WalletRechargeRecord>> getRechargeRecords(
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
         Long userId = securityUtils.getCurrentUserId();
-        Page<WalletRechargeRecord> records = (Page<WalletRechargeRecord>) walletService.getRechargeRecords(userId, page, size);
-        return ResponseEntity.ok(records);
+        PageResponse<WalletRechargeRecord> records = walletService.getRechargeRecords(userId, page, size);
+        return ResultUtils.success(records);
     }
 
-//    @GetMapping("/export")
-//    public ResponseEntity<Resource> exportRechargeRecords() {
-//        Long userId = securityUtils.getCurrentUserId();
-//        try {
-//            Resource file = walletService.exportRechargeRecords(userId);
-//            return ResponseEntity.ok()
-//                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=recharge-records.csv")
-//                    .contentType(MediaType.parseMediaType("text/csv"))
-//                    .body(file);
-//        } catch (IOException e) {
-//            return ResponseEntity.internalServerError().build();
-//        }
-//    }
 }
