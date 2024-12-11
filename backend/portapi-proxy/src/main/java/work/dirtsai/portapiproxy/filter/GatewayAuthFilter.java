@@ -34,7 +34,16 @@ public class GatewayAuthFilter implements Filter {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
+
         HttpServletRequest httpRequest = (HttpServletRequest) request;
+        String path = httpRequest.getRequestURI();
+        String method = httpRequest.getMethod();
+        String remoteAddr = httpRequest.getRemoteAddr();
+        if (httpRequest.getRequestURI().equals("/connectivity-check") ||
+                httpRequest.getMethod().equals("HEAD")) {
+            chain.doFilter(request, response);
+            return;
+        }
         HttpServletResponse httpResponse = (HttpServletResponse) response;
         long startTime = System.currentTimeMillis();
         String requestId = httpRequest.getHeader("X-Gateway-Request-Id");
