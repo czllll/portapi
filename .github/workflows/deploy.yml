@@ -35,7 +35,6 @@ jobs:
         cp backend/portapi-admin/build/libs/portapi-admin-*.jar deploy/admin/
         cp backend/gateway/build/libs/gateway-*.jar deploy/gateway/
         cp backend/portapi-proxy/build/libs/portapi-proxy-*.jar deploy/proxy/
-        cp deploy/docker-compose.yml deploy/
         
         cp backend/portapi-admin/Dockerfile deploy/admin/
         cp backend/gateway/Dockerfile deploy/gateway/
