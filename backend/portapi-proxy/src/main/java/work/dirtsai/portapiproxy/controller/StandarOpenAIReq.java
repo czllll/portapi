@@ -33,7 +33,7 @@ import java.util.Map;
 
 
 @RestController
-@RequestMapping("/")
+@RequestMapping("/v1")
 @Slf4j
 @ServletComponentScan
 public class StandarOpenAIReq {
