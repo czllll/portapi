@@ -3,66 +3,40 @@ name: Deploy Backend Services
 on:
   push:
     branches: [ "main" ]
-    paths:
-      - 'backend/**'
-      - '.github/workflows/**'
-
+    
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-
+    
     steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v3
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-
-      - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
-        with:
-          gradle-version: wrapper
-          cache-read-only: false
-
-      - name: Build with Gradle
-        run: |
-          chmod +x ./gradlew
-          ./gradlew :portapi-admin:bootJar :gateway:bootJar :portapi-proxy:bootJar
-
-      - name: Prepare deployment files
-        run: |
-          mkdir -p deploy/admin deploy/gateway deploy/proxy
-          cp portapi-admin/build/libs/portapi-admin-*.jar deploy/admin/
-          cp gateway/build/libs/gateway-*.jar deploy/gateway/
-          cp portapi-proxy/build/libs/portapi-proxy-*.jar deploy/proxy/
-          cp docker-compose.yml deploy/
-          
-          cp portapi-admin/Dockerfile deploy/admin/
-          cp gateway/Dockerfile deploy/gateway/
-          cp portapi-proxy/Dockerfile deploy/proxy/
-
-      - name: Copy to server
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USERNAME }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          source: "deploy/*"
-          target: "/opt/proj/portapi"
-          strip_components: 1
-
-      - name: Deploy
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USERNAME }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          script: |
-            cd /opt/proj/portapi
-            
-            docker compose stop portapi-gateway portapi-admin portapi-proxy
-            docker compose rm -f portapi-gateway portapi-admin portapi-proxy
-            
-            docker compose up -d --build portapi-gateway portapi-admin portapi-proxy
+    - uses: actions/checkout@v3
+    
+    - name: Set up JDK 21
+      uses: actions/setup-java@v3
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        
+    - name: Setup Gradle
+      uses: gradle/gradle-build-action@v2
+      with:
+        gradle-version: wrapper
+        cache-read-only: false
+        
+    - name: Build with Gradle
+      working-directory: ./backend  
+      run: |
+        chmod +x ./gradlew
+        ./gradlew :portapi-admin:bootJar :gateway:bootJar :portapi-proxy:bootJar
+        
+    - name: Prepare deployment files
+      run: |
+        mkdir -p deploy/admin deploy/gateway deploy/proxy
+        cp backend/portapi-admin/build/libs/portapi-admin-*.jar deploy/admin/
+        cp backend/gateway/build/libs/gateway-*.jar deploy/gateway/
+        cp backend/portapi-proxy/build/libs/portapi-proxy-*.jar deploy/proxy/
+        cp deploy/docker-compose.yml deploy/
+        
+        cp backend/portapi-admin/Dockerfile deploy/admin/
+        cp backend/gateway/Dockerfile deploy/gateway/
+        cp backend/portapi-proxy/Dockerfile deploy/proxy/
