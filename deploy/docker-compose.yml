@@ -1,0 +1,108 @@
+services:
+ mysql:
+   image: mysql:8
+   container_name: mysql
+   environment:
+     MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+     MYSQL_DATABASE: ${DB_NAME}
+     MYSQL_ROOT_HOST: '%'
+   ports:
+     - "3306:3306"
+   volumes:
+     - mysql_data:/var/lib/mysql
+   networks:
+     - app-network
+
+ redis:
+   image: redis:latest
+   container_name: redis
+   ports:
+     - "6379:6379"
+   volumes:
+     - redis_data:/data
+   networks:
+     - app-network
+
+ nacos:
+   image: nacos/nacos-server:latest
+   container_name: nacos
+   environment:
+     MODE: standalone
+   ports:
+     - "8848:8848"
+   networks:
+     - app-network
+   healthcheck:
+     test: ["CMD", "curl", "-f", "http://localhost:8848/nacos/v1/console/health/readiness"]
+     interval: 10s
+     timeout: 5s
+     retries: 3
+
+ portapi-gateway:
+   container_name: portapi-gateway
+   env_file:
+     - .env
+   build: ./gateway
+   ports:
+     - "${GATEWAY_PORT}:${GATEWAY_PORT}"
+   environment:
+     SPRING_PROFILES_ACTIVE: prod
+   depends_on:
+     nacos:
+       condition: service_healthy
+   networks:
+     - app-network
+
+ portapi-admin:
+   container_name: portapi-admin
+   env_file:
+     - .env
+   build: ./admin
+   ports:
+     - "${ADMIN_SERVICE_PORT}:${ADMIN_SERVICE_PORT}"
+   environment:
+     SPRING_PROFILES_ACTIVE: prod
+   depends_on:
+     nacos:
+       condition: service_healthy
+     mysql:
+       condition: service_started
+     redis:
+       condition: service_started
+   networks:
+     - app-network
+
+ portapi-proxy:
+   container_name: portapi-proxy
+   env_file:
+     - .env
+   build: ./proxy
+   ports:
+     - "${PROXY_SERVICE_PORT}:${PROXY_SERVICE_PORT}"
+   environment:
+     SPRING_PROFILES_ACTIVE: prod
+   depends_on:
+     nacos:
+       condition: service_healthy
+   networks:
+     - app-network
+ nginx:
+   image: nginx:latest
+   container_name: nginx
+   volumes:
+     - ./nginx.conf:/etc/nginx/nginx.conf:ro
+     - ./ssl:/etc/nginx/ssl:ro
+   ports:
+     - "80:80"
+     - "443:443"
+   depends_on:
+     - portapi-gateway
+   networks:
+     - app-network
+
+volumes:
+ mysql_data:
+ redis_data:
+
+networks:
+ app-network:
